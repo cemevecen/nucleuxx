@@ -20,7 +20,10 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
   };
 
   return (
-    <div className="relative flex-1 flex flex-col overflow-hidden">
+    // Desktop: flex-1 alır + overflow hidden → kolonlar içten scroll
+    // Mobile:  doğal yükseklik, sayfa dikey scroll
+    <div className="relative flex-1 flex flex-col md:overflow-hidden">
+
       {/* Scroll arrows — hidden on mobile */}
       <button
         onClick={() => scroll("left")}
@@ -41,21 +44,24 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
         </svg>
       </button>
 
-      {/* Fade edges — only on desktop */}
+      {/* Fade edges — desktop only */}
       <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
       <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
 
-      {/* Columns container
-          Mobile:  horizontal snap scroll, column = 88vw
-          Desktop: horizontal scroll, column = 340px
+      {/*
+        Kolon kapsayıcı:
+        Desktop (md+): h-full → parent'ın tüm yüksekliğini al, yatay scroll
+        Mobile:        h-auto → doğal yükseklik, yatay snap scroll
       */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto h-full px-4 sm:px-12 pb-4 scroll-smooth snap-x snap-mandatory sm:snap-none"
+        className="flex gap-4 overflow-x-auto md:h-full px-4 sm:px-12 pb-4 scroll-smooth snap-x snap-mandatory sm:snap-none"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {categories.map((cat) => (
-          <div key={cat.id} className="snap-start">
+          // Desktop: h-full → kolonun tüm yüksekliği scroll container kadar
+          // Mobile: h-auto → içerik kadar uzasın
+          <div key={cat.id} className="snap-start md:h-full flex-shrink-0">
             <CategoryColumn
               category={cat}
               tweets={MOCK_TWEETS[cat.id] ?? []}
@@ -66,7 +72,7 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
       </div>
 
       {/* Mobile dot indicators */}
-      <div className="flex sm:hidden justify-center gap-1.5 pt-2 pb-1">
+      <div className="flex sm:hidden justify-center gap-1.5 pt-2 pb-3">
         {categories.map((cat) => (
           <div key={cat.id} className="w-1.5 h-1.5 rounded-full bg-white/20" />
         ))}

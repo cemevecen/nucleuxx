@@ -12,9 +12,14 @@ interface Props {
 
 export default function CategoryColumn({ category, tweets, onMediaClick }: Props) {
   return (
-    <div className="flex-shrink-0 w-[88vw] sm:w-[340px] flex flex-col h-full">
-      {/* Column Header */}
-      <div className={`bg-gradient-to-r ${category.color} rounded-2xl p-4 mb-3 flex items-center gap-3`}>
+    /*
+      Desktop (md+): h-full → scroll container'ın tamamını doldur, içten scroll
+      Mobile:        w-[88vw], h-auto → tweet sayısı kadar uzasın, sayfa scroll eder
+    */
+    <div className="flex-shrink-0 w-[88vw] sm:w-[340px] flex flex-col md:h-full">
+
+      {/* Kolon başlığı — sticky on desktop */}
+      <div className={`bg-gradient-to-r ${category.color} rounded-2xl p-4 mb-3 flex items-center gap-3 flex-shrink-0`}>
         <span className="text-2xl">{category.emoji}</span>
         <div>
           <h2 className="font-bold text-white text-base leading-tight">{category.name}</h2>
@@ -33,8 +38,12 @@ export default function CategoryColumn({ category, tweets, onMediaClick }: Props
         </div>
       </div>
 
-      {/* Scrollable Tweets */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+      {/*
+        Tweet listesi:
+        Desktop: flex-1 + overflow-y-auto → kolon içinde scroll
+        Mobile:  h-auto → tüm tweet'ler açılır, sayfa scroll eder
+      */}
+      <div className="space-y-3 pr-1 scrollbar-thin md:flex-1 md:overflow-y-auto">
         {tweets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-white/20">
             <span className="text-4xl mb-2">🫙</span>
