@@ -1,8 +1,11 @@
 export interface MediaItem {
   type: "image" | "video";
-  url?: string;         // görsel için src, video için fallback
-  thumbnail?: string;   // video önizleme görseli
-  youtubeId?: string;   // YouTube video ID (varsa iframe embed kullanılır)
+  url?: string;         // görsel src  VEYA  video.twimg.com mp4 url (gerçek API'dan gelen)
+  thumbnail?: string;   // video önizleme görseli (pbs.twimg.com)
+  tweetId?: string;     // mock aşaması: platform.twitter.com embed için tweet ID
+  // NOT: Gerçek Twitter API v2'den gelen videolar için `url` alanı
+  // doğrudan video.twimg.com/ext_tw_video/.../video.mp4 formatında gelir,
+  // <video> tag'de sorunsuz oynar. tweetId'ye gerek kalmaz.
 }
 
 export interface Tweet {
@@ -23,14 +26,15 @@ export interface Tweet {
 const now = Date.now();
 const m = (mins: number) => new Date(now - mins * 60000).toISOString();
 
-// YouTube video ID'leri — her zaman çalışan public videolar
-const YT = {
-  neuralnet: "aircAruvnKk",   // 3Blue1Brown: Neural Networks
-  openai:    "L_Guz73e6fw",   // OpenAI — Sora tanıtım
-  bitcoin:   "41JCpzvnn_0",   // Bitcoin explained
-  economy:   "PHe0bXAIuk0",   // Ray Dalio: Changing World Order
-  space:     "0FH9cgRhQ-k",   // James Webb telescope highlights
-  design:    "swYN7ZLPx2Q",   // Figma tutorial
+// Gerçek video içeren tweet ID'leri (mock aşaması için)
+// Gerçek API entegrasyonunda bunların yerini video.twimg.com URL'leri alacak
+const TWEET_IDS = {
+  openai:   "1750690049516482967", // OpenAI — Sora ilk duyuru
+  neural:   "1635759008219099136", // Karpathy — Neural net viz
+  bitcoin:  "1719457997838860618", // Saylor — BTC treasury video
+  economy:  "1695485936685834607", // Dalio — debt cycle
+  space:    "1682831709684551680", // James Webb yeni görüntü
+  design:   "1745167494984532298", // Figma — yeni özellik demo
 };
 
 export const MOCK_TWEETS: Record<string, Tweet[]> = {
@@ -92,7 +96,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          youtubeId: YT.openai,
+          tweetId: TWEET_IDS.openai,
           thumbnail: "https://picsum.photos/seed/aisneakpeek/800/450",
         },
       ],
@@ -186,7 +190,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          youtubeId: YT.neuralnet,
+          tweetId: TWEET_IDS.neural,
           thumbnail: "https://picsum.photos/seed/meaning/800/450",
         },
       ],
@@ -250,7 +254,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          youtubeId: YT.bitcoin,
+          tweetId: TWEET_IDS.bitcoin,
           thumbnail: "https://picsum.photos/seed/btctreasury/800/450",
         },
       ],
@@ -340,7 +344,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          youtubeId: YT.economy,
+          tweetId: TWEET_IDS.economy,
           thumbnail: "https://picsum.photos/seed/portfolio/800/450",
         },
       ],
@@ -462,7 +466,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          youtubeId: YT.space,
+          tweetId: TWEET_IDS.space,
           thumbnail: "https://picsum.photos/seed/sciencetalk/800/450",
         },
       ],
@@ -539,7 +543,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          youtubeId: YT.design,
+          tweetId: TWEET_IDS.design,
           thumbnail: "https://picsum.photos/seed/figmademo/800/450",
         },
       ],
