@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { MediaItem } from "@/data/mockTweets";
-import Image from "next/image";
 
 interface Props {
   item: MediaItem;
@@ -10,8 +9,6 @@ interface Props {
 }
 
 export default function MediaModal({ item, onClose }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -26,6 +23,9 @@ export default function MediaModal({ item, onClose }: Props) {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
+
+  const isVideo = item.type === "video";
+  const isYouTube = isVideo && !!item.youtubeId;
 
   return (
     <div
@@ -43,22 +43,25 @@ export default function MediaModal({ item, onClose }: Props) {
         </svg>
       </button>
 
-      {/* Media container — stop click propagation so clicking media doesn't close */}
+      {/* Media container */}
       <div
-        className="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center"
+        className="relative w-full max-w-4xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {item.type === "image" ? (
-          <div className="relative w-full" style={{ maxHeight: "90vh" }}>
-            <img
-              src={item.url}
-              alt="Media"
-              className="w-full h-auto max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+        {isYouTube ? (
+          /* YouTube embed */
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-black" style={{ aspectRatio: "16/9" }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${item.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+              title="Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
             />
           </div>
-        ) : (
+        ) : isVideo && item.url ? (
+          /* Direct video */
           <video
-            ref={videoRef}
             src={item.url}
             poster={item.thumbnail}
             controls
@@ -66,11 +69,17 @@ export default function MediaModal({ item, onClose }: Props) {
             playsInline
             className="w-full max-h-[90vh] rounded-2xl shadow-2xl bg-black"
           />
+        ) : (
+          /* Image */
+          <img
+            src={item.url}
+            alt="Media"
+            className="w-full h-auto max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+          />
         )}
       </div>
 
-      {/* Hint */}
-      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 text-xs">
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 text-xs pointer-events-none">
         ESC veya dışarı tıkla → kapat
       </p>
     </div>

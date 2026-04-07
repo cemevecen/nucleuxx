@@ -1,7 +1,8 @@
 export interface MediaItem {
   type: "image" | "video";
-  url: string;        // video için mp4 url
-  thumbnail?: string; // video için poster
+  url?: string;         // görsel için src, video için fallback
+  thumbnail?: string;   // video önizleme görseli
+  youtubeId?: string;   // YouTube video ID (varsa iframe embed kullanılır)
 }
 
 export interface Tweet {
@@ -22,12 +23,14 @@ export interface Tweet {
 const now = Date.now();
 const m = (mins: number) => new Date(now - mins * 60000).toISOString();
 
-// Güvenilir sample video URLs
-const SAMPLE_VIDEOS = {
-  bbb: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  elephant: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-  subaru: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-  tearsOfSteel: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+// YouTube video ID'leri — her zaman çalışan public videolar
+const YT = {
+  neuralnet: "aircAruvnKk",   // 3Blue1Brown: Neural Networks
+  openai:    "L_Guz73e6fw",   // OpenAI — Sora tanıtım
+  bitcoin:   "41JCpzvnn_0",   // Bitcoin explained
+  economy:   "PHe0bXAIuk0",   // Ray Dalio: Changing World Order
+  space:     "0FH9cgRhQ-k",   // James Webb telescope highlights
+  design:    "swYN7ZLPx2Q",   // Figma tutorial
 };
 
 export const MOCK_TWEETS: Record<string, Tweet[]> = {
@@ -89,7 +92,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          url: SAMPLE_VIDEOS.tearsOfSteel,
+          youtubeId: YT.openai,
           thumbnail: "https://picsum.photos/seed/aisneakpeek/800/450",
         },
       ],
@@ -183,7 +186,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          url: SAMPLE_VIDEOS.elephant,
+          youtubeId: YT.neuralnet,
           thumbnail: "https://picsum.photos/seed/meaning/800/450",
         },
       ],
@@ -247,7 +250,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          url: SAMPLE_VIDEOS.subaru,
+          youtubeId: YT.bitcoin,
           thumbnail: "https://picsum.photos/seed/btctreasury/800/450",
         },
       ],
@@ -337,7 +340,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          url: SAMPLE_VIDEOS.bbb,
+          youtubeId: YT.economy,
           thumbnail: "https://picsum.photos/seed/portfolio/800/450",
         },
       ],
@@ -459,7 +462,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          url: SAMPLE_VIDEOS.elephant,
+          youtubeId: YT.space,
           thumbnail: "https://picsum.photos/seed/sciencetalk/800/450",
         },
       ],
@@ -536,7 +539,7 @@ export const MOCK_TWEETS: Record<string, Tweet[]> = {
       media: [
         {
           type: "video",
-          url: SAMPLE_VIDEOS.bbb,
+          youtubeId: YT.design,
           thumbnail: "https://picsum.photos/seed/figmademo/800/450",
         },
       ],
