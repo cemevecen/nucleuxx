@@ -20,14 +20,11 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
   };
 
   return (
-    // Desktop: flex-1 alır + overflow hidden → kolonlar içten scroll
-    // Mobile:  doğal yükseklik, sayfa dikey scroll
-    <div className="relative flex-1 flex flex-col md:overflow-hidden">
-
-      {/* Scroll arrows — hidden on mobile */}
+    <div className="relative">
+      {/* Scroll arrows */}
       <button
         onClick={() => scroll("left")}
-        className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all shadow-xl"
+        className="hidden sm:flex absolute left-2 top-24 z-20 w-9 h-9 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all shadow-xl"
         aria-label="Sola kaydır"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +33,7 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
       </button>
       <button
         onClick={() => scroll("right")}
-        className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all shadow-xl"
+        className="hidden sm:flex absolute right-2 top-24 z-20 w-9 h-9 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all shadow-xl"
         aria-label="Sağa kaydır"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,24 +41,18 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
         </svg>
       </button>
 
-      {/* Fade edges — desktop only */}
+      {/* Fade edges */}
       <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
       <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
 
-      {/*
-        Kolon kapsayıcı:
-        Desktop (md+): h-full → parent'ın tüm yüksekliğini al, yatay scroll
-        Mobile:        h-auto → doğal yükseklik, yatay snap scroll
-      */}
+      {/* Kolonlar — yatay scroll, dikey doğal yükseklik */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto md:h-full px-4 sm:px-12 pb-4 scroll-smooth snap-x snap-mandatory sm:snap-none"
+        className="flex gap-4 overflow-x-auto px-4 sm:px-12 pb-6 snap-x snap-mandatory sm:snap-none"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {categories.map((cat) => (
-          // Desktop: h-full → kolonun tüm yüksekliği scroll container kadar
-          // Mobile: h-auto → içerik kadar uzasın
-          <div key={cat.id} className="snap-start md:h-full flex-shrink-0">
+          <div key={cat.id} className="snap-start flex-shrink-0">
             <CategoryColumn
               category={cat}
               tweets={MOCK_TWEETS[cat.id] ?? []}
@@ -72,7 +63,7 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
       </div>
 
       {/* Mobile dot indicators */}
-      <div className="flex sm:hidden justify-center gap-1.5 pt-2 pb-3">
+      <div className="flex sm:hidden justify-center gap-1.5 pt-1 pb-3">
         {categories.map((cat) => (
           <div key={cat.id} className="w-1.5 h-1.5 rounded-full bg-white/20" />
         ))}

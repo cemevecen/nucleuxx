@@ -54,7 +54,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen md:h-screen bg-[#0a0a0f] flex flex-col md:overflow-hidden">
+    <div className="min-h-screen bg-[#0a0a0f] flex flex-col">
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-violet-900/10 rounded-full blur-3xl" />
@@ -68,7 +68,7 @@ export default function Home() {
       {!showOnboarding && categories && (
         <>
           <Navbar categories={categories} onEditChannels={() => setShowOnboarding(true)} />
-          <main className="flex-1 md:overflow-hidden py-3 sm:py-4">
+          <main className="flex-1 py-3 sm:py-4">
             <FeedLayout categories={categories} onMediaClick={handleMediaClick} />
           </main>
         </>
