@@ -18,7 +18,7 @@ export async function GET(
   }
 
   // Bearer token yoksa mock'a düş
-  if (!process.env.TWITTER_BEARER_TOKEN) {
+  if (!process.env.TWITTER_BEARER_TOKEN && !process.env.X_BEARER_TOKEN) {
     const mock = MOCK_TWEETS[categoryId] ?? [];
     return NextResponse.json(mock, {
       headers: { "X-Data-Source": "mock" },

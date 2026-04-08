@@ -77,8 +77,10 @@ function mapTweet(tw: TwTweet, users: TwUser[], mediaMap: Map<string, TwMedia>):
 // ─── Asıl fetch — Bearer Token ile Twitter API v2 ────────────────────────────
 
 async function _fetchTweets(handles: string[], maxResults = 10): Promise<Tweet[]> {
-  const token = process.env.TWITTER_BEARER_TOKEN;
-  if (!token) return [];
+  const raw = process.env.TWITTER_BEARER_TOKEN ?? process.env.X_BEARER_TOKEN;
+  if (!raw) return [];
+  // .env içinde URL-encoded kayıtlıysa (%2B, %3D vb.) decode et
+  const token = decodeURIComponent(raw);
 
   // "from:handle1 OR from:handle2 ..." — retweet'leri hariç tut
   const query = handles.map((h) => `from:${h}`).join(" OR ") + " -is:retweet -is:reply";
