@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { logout } from "@/app/actions/auth";
+import {
+  logout,
+  linkGoogleFromProfile,
+  linkTwitterFromProfile,
+} from "@/app/actions/auth";
 import { DEFAULT_CATEGORIES } from "@/data/categories";
 
 const STORAGE_KEY = "nucleuxx_categories";
@@ -13,6 +17,7 @@ interface Props {
   email: string;
   image: string | null;
   provider: string;
+  linked: { email: boolean; google: boolean; twitter: boolean };
   createdAt: string;
 }
 
@@ -58,7 +63,14 @@ function formatDate(iso: string) {
   });
 }
 
-export default function ProfileClient({ name, email, image, provider, createdAt }: Props) {
+export default function ProfileClient({
+  name,
+  email,
+  image,
+  provider,
+  linked,
+  createdAt,
+}: Props) {
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES.slice(0, 4));
   const [channelCounts, setChannelCounts] = useState<Record<string, number>>({});
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -151,15 +163,61 @@ export default function ProfileClient({ name, email, image, provider, createdAt 
 
         {/* Info cards */}
         <div className="space-y-3 mb-8">
-          {/* Giriş yöntemi */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between">
-            <span className="text-white/50 text-sm">Giriş yöntemi</span>
-            <span
-              className={`text-xs font-medium px-2.5 py-1 rounded-full border ${provColor}`}
-              suppressHydrationWarning
-            >
-              {provLabel}
-            </span>
+          {/* Bağlı giriş yöntemleri (tek hesapta e-posta + Google + X) */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-white/50 text-sm">Bağlı giriş yöntemleri</span>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full border shrink-0 ${provColor}`}
+                suppressHydrationWarning
+                title="Özet"
+              >
+                {provLabel}
+              </span>
+            </div>
+            <p className="text-white/35 text-[11px] leading-snug mb-3">
+              Google veya X eklemek için aşağıdaki <span className="text-white/50">Bağla</span> ile giriş yap; hesabın{" "}
+              <span className="text-white/55">{email}</span> ile aynı e-postayı kullanmalı (X bazen e-posta vermez).
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span
+                className={`inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border ${
+                  linked.email
+                    ? "bg-violet-500/15 text-violet-300 border-violet-500/25"
+                    : "bg-white/5 text-white/35 border-white/10"
+                }`}
+              >
+                {linked.email ? "E-posta + şifre" : "E-posta + şifre —"}
+              </span>
+              {linked.google ? (
+                <span className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border bg-blue-500/15 text-blue-300 border-blue-500/25">
+                  Google
+                </span>
+              ) : (
+                <form action={linkGoogleFromProfile} className="inline">
+                  <button
+                    type="submit"
+                    className="text-xs font-medium px-2.5 py-1.5 rounded-full border border-blue-500/40 text-blue-300 hover:bg-blue-500/10 transition-colors"
+                  >
+                    Google bağla
+                  </button>
+                </form>
+              )}
+              {linked.twitter ? (
+                <span className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border bg-white/10 text-white/80 border-white/15">
+                  X
+                </span>
+              ) : (
+                <form action={linkTwitterFromProfile} className="inline">
+                  <button
+                    type="submit"
+                    className="text-xs font-medium px-2.5 py-1.5 rounded-full border border-white/20 text-white/70 hover:bg-white/10 transition-colors"
+                  >
+                    X bağla
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
 
           {/* Üyelik tarihi */}

@@ -40,7 +40,8 @@ function writeUsers(users: User[]) {
 }
 
 export function findByEmail(email: string): User | undefined {
-  return readUsers().find((u) => u.email === email);
+  const e = email.trim().toLowerCase();
+  return readUsers().find((u) => u.email.trim().toLowerCase() === e);
 }
 
 export function findById(id: string): User | undefined {
@@ -116,12 +117,31 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
 
+/** Google / X hesabı bu kullanıcıya bağlı mı? */
+export function hasLinkedGoogle(user: User): boolean {
+  return (
+    !!user.googleSub ||
+    (user.provider === "google" && !!user.providerId)
+  );
+}
+
+export function hasLinkedTwitter(user: User): boolean {
+  return (
+    !!user.twitterId ||
+    (user.provider === "twitter" && !!user.providerId)
+  );
+}
+
+export function hasLinkedEmailPassword(user: User): boolean {
+  return !!user.passwordHash;
+}
+
 /** Profilde göstermek: bağlı giriş yöntemleri (çoklu giriş). */
 export function formatLinkedProviders(user: User): string {
   const parts: string[] = [];
   if (user.passwordHash) parts.push("E-posta");
-  if (user.googleSub) parts.push("Google");
-  if (user.twitterId) parts.push("X");
+  if (hasLinkedGoogle(user)) parts.push("Google");
+  if (hasLinkedTwitter(user)) parts.push("X");
   if (parts.length === 0) {
     if (user.provider === "google") return "Google";
     if (user.provider === "twitter") return "X";

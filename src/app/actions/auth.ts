@@ -43,6 +43,15 @@ export async function loginWithTwitter() {
   await signIn("twitter", { redirectTo: "/" });
 }
 
+/** Profilde oturum açıkken Google / X hesabını aynı kullanıcıya bağlamak için (OAuth dönüşü /profile). */
+export async function linkGoogleFromProfile() {
+  await signIn("google", { redirectTo: "/profile" });
+}
+
+export async function linkTwitterFromProfile() {
+  await signIn("twitter", { redirectTo: "/profile" });
+}
+
 export async function logout() {
   await signOut({ redirectTo: "/login" });
 }

@@ -15,6 +15,13 @@ export default async function ProfilePage() {
       email={session.user.email ?? ""}
       image={session.user.image ?? null}
       provider={userData?.provider ?? "E-posta"}
+      linked={
+        userData?.linked ?? {
+          email: true,
+          google: false,
+          twitter: false,
+        }
+      }
       createdAt={userData?.createdAt ?? new Date().toISOString()}
     />
   );
