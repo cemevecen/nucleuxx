@@ -77,7 +77,12 @@ export default function Home() {
       </div>
 
       {showOnboarding && (
-        <Onboarding onComplete={handleOnboardingComplete} />
+        <Onboarding
+          onComplete={handleOnboardingComplete}
+          onClose={categories ? () => setShowOnboarding(false) : undefined}
+          initialCategories={categories?.map((c) => c.id)}
+          initialChannels={selectedChannels}
+        />
       )}
 
       {!showOnboarding && categories && (

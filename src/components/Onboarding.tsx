@@ -6,14 +6,21 @@ import { CHANNEL_SUGGESTIONS } from "@/data/channelSuggestions";
 
 interface Props {
   onComplete: (categories: Category[], channels: Record<string, string[]>) => void;
+  onClose?: () => void;
+  initialCategories?: string[];
+  initialChannels?: Record<string, string[]>;
 }
 
-export default function Onboarding({ onComplete }: Props) {
+export default function Onboarding({ onComplete, onClose, initialCategories, initialChannels }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
-    new Set(DEFAULT_CATEGORIES.slice(0, 4).map((c) => c.id))
+    new Set(initialCategories ?? DEFAULT_CATEGORIES.slice(0, 4).map((c) => c.id))
   );
-  const [selectedChannels, setSelectedChannels] = useState<Record<string, Set<string>>>({});
+  const [selectedChannels, setSelectedChannels] = useState<Record<string, Set<string>>>(
+    Object.fromEntries(
+      Object.entries(initialChannels ?? {}).map(([k, v]) => [k, new Set(v)])
+    )
+  );
   const [activeTab, setActiveTab] = useState<string>("");
   const [visibleCount, setVisibleCount] = useState<Record<string, number>>({});
 
@@ -96,6 +103,19 @@ export default function Onboarding({ onComplete }: Props) {
         </div>
 
         <div className="relative w-full max-w-2xl">
+          {/* Kapat butonu — sadece mevcut seçim varsa */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="absolute -top-2 right-0 w-9 h-9 flex items-center justify-center text-white/40 hover:text-white transition-colors rounded-full hover:bg-white/10"
+              aria-label="Kapat"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+
           {/* Logo */}
           <div className="text-center mb-10">
             <h1 className="text-5xl font-black tracking-tighter text-white mb-2">
@@ -180,7 +200,19 @@ export default function Onboarding({ onComplete }: Props) {
           <div className="text-center">
             <h2 className="text-white font-bold text-lg">Kanalları Seç</h2>
           </div>
-          <span className="text-white/40 text-xs">Adım 2/2</span>
+          {onClose ? (
+            <button
+              onClick={onClose}
+              className="w-9 h-9 flex items-center justify-center text-white/40 hover:text-white transition-colors rounded-full hover:bg-white/10"
+              aria-label="Kapat"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          ) : (
+            <span className="text-white/40 text-xs">Adım 2/2</span>
+          )}
         </div>
 
         {/* Category tabs */}
