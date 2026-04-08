@@ -71,11 +71,9 @@ export default function Onboarding({ onComplete }: Props) {
                   </div>
                 )}
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3"
+                  className="w-10 h-10 rounded-xl mb-3"
                   style={{ backgroundImage: `linear-gradient(to bottom right, ${cat.gradient.from}, ${cat.gradient.to})` }}
-                >
-                  {cat.emoji}
-                </div>
+                />
                 <p className="font-semibold text-white text-sm">{cat.name}</p>
                 <p className="text-white/40 text-xs mt-0.5">{cat.accounts.length} hesap</p>
               </button>

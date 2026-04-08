@@ -18,7 +18,6 @@ export default function CategoryColumn({ category, tweets, onMediaClick }: Props
         className="rounded-2xl p-4 mb-3 flex items-center gap-3"
         style={{ backgroundImage: `linear-gradient(to right, ${category.gradient.from}, ${category.gradient.to})` }}
       >
-        <span className="text-2xl">{category.emoji}</span>
         <div>
           <h2 className="font-bold text-white text-base leading-tight">{category.name}</h2>
           <p className="text-white/70 text-xs">{category.accounts.length} hesap</p>
@@ -40,7 +39,6 @@ export default function CategoryColumn({ category, tweets, onMediaClick }: Props
       <div className="space-y-3">
         {tweets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-white/20">
-            <span className="text-4xl mb-2">🫙</span>
             <p className="text-sm">Henüz tweet yok</p>
           </div>
         ) : (

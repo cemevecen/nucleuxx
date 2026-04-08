@@ -7,7 +7,6 @@ export interface TwitterAccount {
 export interface Category {
   id: string;
   name: string;
-  emoji: string;
   gradient: { from: string; to: string };
   accounts: TwitterAccount[];
 }
@@ -16,7 +15,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "ai",
     name: "Yapay Zeka",
-    emoji: "🤖",
     gradient: { from: "#8b5cf6", to: "#7e22ce" },
     accounts: [
       { handle: "emrekiciman",    name: "Emre Kıcıman",         avatar: "https://unavatar.io/twitter/emrekiciman" },
@@ -34,7 +32,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "tech",
     name: "Teknoloji",
-    emoji: "💻",
     gradient: { from: "#3b82f6", to: "#0891b2" },
     accounts: [
       { handle: "webrazzi",       name: "Webrazzi",              avatar: "https://unavatar.io/twitter/webrazzi" },
@@ -52,7 +49,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "crypto",
     name: "Kripto",
-    emoji: "₿",
     gradient: { from: "#f97316", to: "#ca8a04" },
     accounts: [
       { handle: "kriptokoin",     name: "Kripto Koin",           avatar: "https://unavatar.io/twitter/kriptokoin" },
@@ -70,7 +66,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "economy",
     name: "Ekonomi",
-    emoji: "📈",
     gradient: { from: "#22c55e", to: "#047857" },
     accounts: [
       { handle: "mahfiegilmez",   name: "Mahfi Eğilmez",         avatar: "https://unavatar.io/twitter/mahfiegilmez" },
@@ -88,7 +83,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "turkey",
     name: "Türkiye",
-    emoji: "🇹🇷",
     gradient: { from: "#ef4444", to: "#be123c" },
     accounts: [
       { handle: "fatihaltayli",   name: "Fatih Altaylı",         avatar: "https://unavatar.io/twitter/fatihaltayli" },
@@ -106,7 +100,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "science",
     name: "Bilim",
-    emoji: "🔬",
     gradient: { from: "#14b8a6", to: "#0284c7" },
     accounts: [
       { handle: "tubitak_gov_tr", name: "TÜBİTAK",              avatar: "https://unavatar.io/twitter/tubitak_gov_tr" },
@@ -124,7 +117,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "design",
     name: "Tasarım",
-    emoji: "🎨",
     gradient: { from: "#ec4899", to: "#a21caf" },
     accounts: [
       { handle: "uxturkiye",      name: "UX Türkiye",            avatar: "https://unavatar.io/twitter/uxturkiye" },

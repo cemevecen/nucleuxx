@@ -22,9 +22,8 @@ export default function Navbar({ categories, onEditChannels }: Props) {
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1 flex-shrink-0"
+            className="flex items-center bg-white/5 border border-white/10 rounded-full px-3 py-1 flex-shrink-0"
           >
-            <span className="text-xs">{cat.emoji}</span>
             <span className="text-white/60 text-xs font-medium">{cat.name}</span>
           </div>
         ))}
