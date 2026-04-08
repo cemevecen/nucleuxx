@@ -9,14 +9,18 @@ import FeedLayout from "@/components/FeedLayout";
 import MediaModal from "@/components/MediaModal";
 
 const STORAGE_KEY = "nucleuxx_categories";
+const CHANNELS_KEY = "nucleuxx_channels";
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[] | null>(null);
+  const [selectedChannels, setSelectedChannels] = useState<Record<string, string[]>>({});
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
+    const storedChannels = localStorage.getItem(CHANNELS_KEY);
+
     if (stored) {
       try {
         const ids: string[] = JSON.parse(stored);
@@ -25,15 +29,26 @@ export default function Home() {
       } catch {
         setCategories(null);
       }
+
+      if (storedChannels) {
+        try {
+          const channels: Record<string, string[]> = JSON.parse(storedChannels);
+          setSelectedChannels(channels);
+        } catch {
+          setSelectedChannels({});
+        }
+      }
     } else {
       setShowOnboarding(true);
     }
   }, []);
 
-  const handleOnboardingComplete = (selected: Category[]) => {
+  const handleOnboardingComplete = (selected: Category[], channels: Record<string, string[]>) => {
     const ids = selected.map((c) => c.id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    localStorage.setItem(CHANNELS_KEY, JSON.stringify(channels));
     setCategories(selected);
+    setSelectedChannels(channels);
     setShowOnboarding(false);
   };
 
@@ -69,7 +84,11 @@ export default function Home() {
         <>
           <Navbar categories={categories} onEditChannels={() => setShowOnboarding(true)} />
           <main className="flex-1 py-3 sm:py-4">
-            <FeedLayout categories={categories} onMediaClick={handleMediaClick} />
+            <FeedLayout
+              categories={categories}
+              onMediaClick={handleMediaClick}
+              selectedChannels={selectedChannels}
+            />
           </main>
         </>
       )}

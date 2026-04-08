@@ -8,9 +8,14 @@ interface Props {
   category: Category;
   tweets: Tweet[];
   onMediaClick: (item: MediaItem) => void;
+  selectedHandles: string[];
 }
 
-export default function CategoryColumn({ category, tweets, onMediaClick }: Props) {
+export default function CategoryColumn({ category, tweets, onMediaClick, selectedHandles }: Props) {
+  const filteredTweets = selectedHandles.length > 0
+    ? tweets.filter((t) => selectedHandles.includes(t.authorHandle))
+    : tweets;
+
   return (
     <div className="flex-shrink-0 w-[88vw] sm:w-[340px]">
       {/* Kolon başlığı */}
@@ -20,7 +25,11 @@ export default function CategoryColumn({ category, tweets, onMediaClick }: Props
       >
         <div>
           <h2 className="font-bold text-white text-base leading-tight">{category.name}</h2>
-          <p className="text-white/70 text-xs">{category.accounts.length} hesap</p>
+          <p className="text-white/70 text-xs">
+            {selectedHandles.length > 0
+              ? `${selectedHandles.length} hesap seçili`
+              : `${category.accounts.length} hesap`}
+          </p>
         </div>
         <div className="ml-auto flex -space-x-2">
           {category.accounts.slice(0, 3).map((acc) => (
@@ -37,12 +46,12 @@ export default function CategoryColumn({ category, tweets, onMediaClick }: Props
 
       {/* Tweet listesi — doğal yükseklik, sayfa scroll eder */}
       <div className="space-y-3">
-        {tweets.length === 0 ? (
+        {filteredTweets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-white/20">
             <p className="text-sm">Henüz tweet yok</p>
           </div>
         ) : (
-          tweets.map((tweet) => (
+          filteredTweets.map((tweet) => (
             <TweetCard key={tweet.id} tweet={tweet} onMediaClick={onMediaClick} />
           ))
         )}

@@ -8,9 +8,10 @@ import CategoryColumn from "./CategoryColumn";
 interface Props {
   categories: Category[];
   onMediaClick: (item: MediaItem) => void;
+  selectedChannels: Record<string, string[]>;
 }
 
-export default function FeedLayout({ categories, onMediaClick }: Props) {
+export default function FeedLayout({ categories, onMediaClick, selectedChannels }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: "left" | "right") => {
@@ -57,6 +58,7 @@ export default function FeedLayout({ categories, onMediaClick }: Props) {
               category={cat}
               tweets={MOCK_TWEETS[cat.id] ?? []}
               onMediaClick={onMediaClick}
+              selectedHandles={selectedChannels[cat.id] ?? []}
             />
           </div>
         ))}
