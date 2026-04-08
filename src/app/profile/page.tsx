@@ -14,7 +14,7 @@ export default async function ProfilePage() {
       name={session.user.name ?? ""}
       email={session.user.email ?? ""}
       image={session.user.image ?? null}
-      provider={userData?.provider ?? "email"}
+      provider={userData?.provider ?? "E-posta"}
       createdAt={userData?.createdAt ?? new Date().toISOString()}
     />
   );

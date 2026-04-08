@@ -33,19 +33,29 @@ function avatarGradient(str: string) {
 }
 
 function providerLabel(provider: string) {
-  if (provider.includes(" · "))
-    return { label: provider, color: "bg-white/10 text-white/80 border-white/15" };
-  if (provider === "google" || provider === "Google")
-    return { label: "Google", color: "bg-blue-500/15 text-blue-400 border-blue-500/20" };
-  if (provider === "twitter" || provider === "X")
-    return { label: "X (Twitter)", color: "bg-white/10 text-white/70 border-white/15" };
-  if (provider === "email" || provider === "E-posta")
+  const p = provider.trim();
+  // SSR / eski sürüm uyumu: "email" ve "Email" tek biçimde (hydration drift önlenir)
+  if (p === "email" || p === "Email") {
     return { label: "E-posta", color: "bg-violet-500/15 text-violet-400 border-violet-500/20" };
-  return { label: provider, color: "bg-white/10 text-white/80 border-white/15" };
+  }
+  if (p.includes(" · "))
+    return { label: p, color: "bg-white/10 text-white/80 border-white/15" };
+  if (p === "google" || p === "Google")
+    return { label: "Google", color: "bg-blue-500/15 text-blue-400 border-blue-500/20" };
+  if (p === "twitter" || p === "X")
+    return { label: "X (Twitter)", color: "bg-white/10 text-white/70 border-white/15" };
+  if (p === "E-posta")
+    return { label: "E-posta", color: "bg-violet-500/15 text-violet-400 border-violet-500/20" };
+  return { label: p, color: "bg-white/10 text-white/80 border-white/15" };
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+  return new Date(iso).toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Istanbul",
+  });
 }
 
 export default function ProfileClient({ name, email, image, provider, createdAt }: Props) {
@@ -144,7 +154,10 @@ export default function ProfileClient({ name, email, image, provider, createdAt 
           {/* Giriş yöntemi */}
           <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between">
             <span className="text-white/50 text-sm">Giriş yöntemi</span>
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${provColor}`}>
+            <span
+              className={`text-xs font-medium px-2.5 py-1 rounded-full border ${provColor}`}
+              suppressHydrationWarning
+            >
               {provLabel}
             </span>
           </div>
@@ -152,7 +165,9 @@ export default function ProfileClient({ name, email, image, provider, createdAt 
           {/* Üyelik tarihi */}
           <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between">
             <span className="text-white/50 text-sm">Üyelik tarihi</span>
-            <span className="text-white/80 text-sm">{formatDate(createdAt)}</span>
+            <span className="text-white/80 text-sm" suppressHydrationWarning>
+              {formatDate(createdAt)}
+            </span>
           </div>
         </div>
 
