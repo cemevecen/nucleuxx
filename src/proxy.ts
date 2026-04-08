@@ -1,25 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { decrypt } from "@/lib/session";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 
-const publicRoutes = ["/login"];
+export default auth((req) => {
+  const isLoggedIn = !!req.auth;
+  const isLoginPage = req.nextUrl.pathname === "/login";
 
-export async function proxy(req: NextRequest) {
-  const path = req.nextUrl.pathname;
-  const isPublicRoute = publicRoutes.includes(path);
-
-  const session = req.cookies.get("session")?.value;
-  const payload = await decrypt(session);
-
-  if (!payload && !isPublicRoute) {
+  if (!isLoggedIn && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  if (payload && isPublicRoute) {
+  if (isLoggedIn && isLoginPage) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],

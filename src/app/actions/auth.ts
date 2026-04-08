@@ -1,29 +1,34 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { createSession, deleteSession } from "@/lib/session";
+import { signIn, signOut } from "@/auth";
+import { AuthError } from "next-auth";
 
-export async function login(prevState: { error?: string } | undefined, formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  // Şimdilik env credentials — domain gelince DB sorgusuna çevir
-  const validEmail = process.env.ADMIN_EMAIL;
-  const validPassword = process.env.ADMIN_PASSWORD;
-
-  if (!email || !password) {
-    return { error: "Email ve şifre gerekli." };
+export async function loginWithCredentials(
+  prevState: { error?: string } | undefined,
+  formData: FormData
+) {
+  try {
+    await signIn("credentials", {
+      email: formData.get("email"),
+      password: formData.get("password"),
+      redirectTo: "/",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Email veya şifre hatalı." };
+    }
+    throw error;
   }
+}
 
-  if (email !== validEmail || password !== validPassword) {
-    return { error: "Email veya şifre hatalı." };
-  }
+export async function loginWithGoogle() {
+  await signIn("google", { redirectTo: "/" });
+}
 
-  await createSession("1", email);
-  redirect("/");
+export async function loginWithTwitter() {
+  await signIn("twitter", { redirectTo: "/" });
 }
 
 export async function logout() {
-  await deleteSession();
-  redirect("/login");
+  await signOut({ redirectTo: "/login" });
 }
