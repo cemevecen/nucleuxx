@@ -117,6 +117,26 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
 
+/** OAuth ile oluşan hesaba ilk kez e-posta+şifre girişi eklemek için. */
+export async function setUserPasswordForId(
+  userId: string,
+  plainPassword: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (plainPassword.length < 8 || plainPassword.length > 128) {
+    return { ok: false, error: "Şifre 8–128 karakter olmalı." };
+  }
+  const users = readUsers();
+  const i = users.findIndex((u) => u.id === userId);
+  if (i === -1) return { ok: false, error: "Kullanıcı bulunamadı." };
+  if (users[i].passwordHash) {
+    return { ok: false, error: "Bu hesapta şifre zaten tanımlı." };
+  }
+  const passwordHash = await hashPassword(plainPassword);
+  users[i] = { ...users[i], passwordHash };
+  writeUsers(users);
+  return { ok: true };
+}
+
 /** Google / X hesabı bu kullanıcıya bağlı mı? */
 export function hasLinkedGoogle(user: User): boolean {
   return (

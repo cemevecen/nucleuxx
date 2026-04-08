@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useActionState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { setCredentialsPasswordFromProfile } from "@/app/actions/password";
 import {
   logout,
   linkGoogleFromProfile,
@@ -71,6 +73,8 @@ export default function ProfileClient({
   linked,
   createdAt,
 }: Props) {
+  const router = useRouter();
+  const [pwState, pwAction, pwPending] = useActionState(setCredentialsPasswordFromProfile, undefined);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES.slice(0, 4));
   const [channelCounts, setChannelCounts] = useState<Record<string, number>>({});
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -98,6 +102,10 @@ export default function ProfileClient({
       } catch {}
     }
   }, []);
+
+  useEffect(() => {
+    if (pwState?.ok) router.refresh();
+  }, [pwState?.ok, router]);
 
   const grad = avatarGradient(email || name);
   const firstLetter = (name || email || "?")[0].toUpperCase();
@@ -176,8 +184,9 @@ export default function ProfileClient({
               </span>
             </div>
             <p className="text-white/35 text-[11px] leading-snug mb-3">
-              Google veya X eklemek için aşağıdaki <span className="text-white/50">Bağla</span> ile giriş yap; hesabın{" "}
-              <span className="text-white/55">{email}</span> ile aynı e-postayı kullanmalı (X bazen e-posta vermez).
+              Sadece Google veya X ile kayıt olduysan giriş sayfasında e-posta/şifre çalışmaz — önce aşağıdan{" "}
+              <span className="text-white/50">şifre belirle</span>. Google/X bağlarken{" "}
+              <span className="text-white/55">{email}</span> ile aynı e-posta kullanılmalı (X bazen vermez).
             </p>
             <div className="flex flex-wrap gap-2">
               <span
@@ -218,6 +227,47 @@ export default function ProfileClient({
                 </form>
               )}
             </div>
+
+            {!linked.email && (
+              <form action={pwAction} className="mt-4 space-y-2 pt-3 border-t border-white/10">
+                <p className="text-white/50 text-xs font-medium">E-posta ile giriş için şifre belirle</p>
+                <input
+                  type="password"
+                  name="newPassword"
+                  autoComplete="new-password"
+                  placeholder="Yeni şifre (en az 8 karakter)"
+                  minLength={8}
+                  maxLength={128}
+                  required
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+                />
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  autoComplete="new-password"
+                  placeholder="Şifre tekrar"
+                  minLength={8}
+                  maxLength={128}
+                  required
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+                />
+                {pwState?.error ? (
+                  <p className="text-red-400/90 text-xs">{pwState.error}</p>
+                ) : null}
+                {pwState?.ok ? (
+                  <p className="text-emerald-400/90 text-xs">
+                    Şifre kaydedildi. Çıkış yapıp giriş sayfasından e-posta ve şifre ile girebilirsin.
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={pwPending}
+                  className="w-full rounded-xl bg-violet-600/80 hover:bg-violet-600 disabled:opacity-50 text-white text-sm font-medium py-2.5 transition-colors"
+                >
+                  {pwPending ? "Kaydediliyor…" : "Şifreyi kaydet"}
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Üyelik tarihi */}
