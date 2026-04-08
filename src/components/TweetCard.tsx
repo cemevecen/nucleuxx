@@ -1,7 +1,7 @@
 "use client";
 
 import { Tweet, MediaItem } from "@/data/mockTweets";
-import { timeAgo, formatCount } from "@/lib/timeAgo";
+import { formatTweetTime, formatCount } from "@/lib/timeAgo";
 import Image from "next/image";
 
 interface Props {
@@ -40,16 +40,19 @@ export default function TweetCard({ tweet, onMediaClick }: Props) {
                 <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91-1.01-1-2.52-1.27-3.91-.81C14.67 2.88 13.43 2 12 2c-1.43 0-2.67.88-3.34 2.19-1.39-.46-2.9-.2-3.91.81-1 1.01-1.27 2.52-.81 3.91C2.88 9.33 2 10.57 2 12c0 1.43.88 2.67 2.19 3.34-.46 1.39-.2 2.9.81 3.91 1.01 1 2.52 1.27 3.91.81C9.33 21.12 10.57 22 12 22c1.43 0 2.67-.88 3.34-2.19 1.39.46 2.9.2 3.91-.81 1-1.01 1.27-2.52.81-3.91C21.12 14.67 22 13.43 22 12h.25zm-13.42 4.29L5 12.46l1.76-1.76 2.07 2.07 4.71-4.71L15.3 9.8l-6.47 6.49z" />
               </svg>
             )}
-            <span className="text-white/40 text-xs ml-auto flex-shrink-0">
-              {timeAgo(tweet.timestamp)}
+            <span
+              className="text-white/40 text-xs ml-auto flex-shrink-0 font-mono tabular-nums"
+              title={new Date(tweet.timestamp).toLocaleString("tr-TR")}
+            >
+              {formatTweetTime(tweet.timestamp)}
             </span>
           </div>
           <span className="text-white/40 text-xs">@{tweet.authorHandle}</span>
         </div>
       </div>
 
-      {/* Content */}
-      <p className="text-white/90 text-sm leading-relaxed mb-3">
+      {/* Content — uzun tweetler tamamen görünür */}
+      <p className="text-white/90 text-sm leading-relaxed mb-3 whitespace-pre-wrap break-words">
         {tweet.content}
       </p>
 
@@ -66,41 +69,71 @@ export default function TweetCard({ tweet, onMediaClick }: Props) {
         >
           {media.slice(0, 4).map((item, i) => {
             const isVideo = item.type === "video";
-            const src = isVideo ? item.thumbnail ?? item.url : item.url;
             const isLastOfThree = media.length === 3 && i === 2;
+            const sizeClasses = `${media.length === 1 ? "w-full rounded-xl" : "rounded-lg"} ${
+              isLastOfThree ? "col-span-2" : ""
+            }`;
+            const aspectStyle = { aspectRatio: media.length === 1 ? "16/9" : "4/3" };
 
+            // ── Video: feedde doğrudan oynar, detaya gitmeye gerek yok
+            if (isVideo) {
+              // Gerçek API url'i (video.twimg.com mp4) varsa inline <video>,
+              // yoksa (mock) Twitter embed fallback.
+              const hasDirectVideo = !!item.url;
+              const hasTwitterEmbed = !item.url && !!item.tweetId;
+
+              return (
+                <div
+                  key={i}
+                  className={`relative overflow-hidden bg-black ${sizeClasses}`}
+                  style={aspectStyle}
+                >
+                  {hasDirectVideo && (
+                    <video
+                      src={item.url}
+                      poster={item.thumbnail}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  )}
+                  {hasTwitterEmbed && (
+                    <iframe
+                      src={`https://platform.twitter.com/embed/Tweet.html?id=${item.tweetId}&theme=dark&chrome=nofooter`}
+                      title="Tweet video"
+                      className="absolute inset-0 w-full h-full border-0"
+                      scrolling="no"
+                      allowFullScreen
+                    />
+                  )}
+                  {!hasDirectVideo && !hasTwitterEmbed && item.thumbnail && (
+                    <img
+                      src={item.thumbnail}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+              );
+            }
+
+            // ── Görsel: tıklayınca modal ile büyüt
             return (
               <button
                 key={i}
                 onClick={() => onMediaClick(item)}
-                className={`relative overflow-hidden bg-white/5 transition-opacity hover:opacity-90 active:opacity-75 ${
-                  media.length === 1 ? "w-full rounded-xl" : "rounded-lg"
-                } ${isLastOfThree ? "col-span-2" : ""}`}
-                style={{ aspectRatio: media.length === 1 ? "16/9" : "4/3" }}
-                aria-label={isVideo ? "Videoyu oynat" : "Görseli büyüt"}
+                className={`relative overflow-hidden bg-white/5 transition-opacity hover:opacity-90 active:opacity-75 ${sizeClasses}`}
+                style={aspectStyle}
+                aria-label="Görseli büyüt"
               >
-                {/* Image */}
                 <img
-                  src={src}
+                  src={item.url}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
                 />
-
-                {/* Video play overlay */}
-                {isVideo && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    <div className="w-12 h-12 rounded-full bg-black/60 border-2 border-white/80 flex items-center justify-center backdrop-blur-sm">
-                      <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    {/* Duration badge placeholder */}
-                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded font-mono">
-                      video
-                    </span>
-                  </div>
-                )}
 
                 {/* +N more overlay */}
                 {media.length > 4 && i === 3 && (
