@@ -196,13 +196,26 @@ export default function ProfileClient({
       </div>
 
       <div className="relative max-w-lg mx-auto px-4 py-8">
-        {/* Back */}
-        <Link href="/" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white text-sm transition-colors mb-8">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Ana Sayfa
-        </Link>
+        {/* Üst satır: ana sayfa + çıkış (profilde Navbar olmadığı için burada) */}
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-white/40 hover:text-white text-sm transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Ana Sayfa
+          </Link>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white/90 shadow-sm transition hover:border-white/25 hover:bg-white/[0.1]"
+            >
+              Çıkış
+            </button>
+          </form>
+        </div>
 
         {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-8">
@@ -241,11 +254,12 @@ export default function ProfileClient({
                   </p>
                 </div>
                 <p
-                  className="max-w-[20rem] text-[13px] leading-relaxed text-white/42 sm:text-right"
+                  className="max-w-[22rem] text-[13px] leading-relaxed text-white/42 sm:text-right"
                   suppressHydrationWarning
                 >
-                  Farklı bir hesapla devam etmek için üst menüden{" "}
-                  <span className="text-white/65">Çıkış</span> kullan; bu panel yalnızca durumu gösterir.
+                  Başka hesapla giriş için sayfanın üstündeki veya alttaki{" "}
+                  <span className="text-white/65">Çıkış</span> ile oturumu kapat; ana ekranda da aynı düğme var. Bu
+                  blok yalnızca bilgi gösterir.
                 </p>
               </div>
 
