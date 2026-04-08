@@ -26,7 +26,7 @@ export default function LoginForm({ oauth }: Props) {
       <div className="relative w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black tracking-tighter text-white">nucleuxx</h1>
-          <p className="text-white/30 text-sm mt-1">Twitter feed agregatorü</p>
+          <p className="text-white/30 text-sm mt-1">Twitter feed agregatörü</p>
         </div>
 
         {oauth.oauthGloballyDisabled && (

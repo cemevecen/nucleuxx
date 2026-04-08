@@ -3,6 +3,7 @@ export interface MediaItem {
  url?: string; // görsel src VEYA video.twimg.com mp4 url (gerçek API'dan gelen)
  thumbnail?: string; // video önizleme görseli (pbs.twimg.com)
  tweetId?: string; // mock aşaması: platform.twitter.com embed için tweet ID
+ youtubeId?: string; // mock aşaması: YouTube video ID — en güvenilir embed yolu
  // NOT: Gerçek Twitter API v2'den gelen videolar için `url` alanı
  // doğrudan video.twimg.com/ext_tw_video/.../video.mp4 formatında gelir,
  // <video> tag'de sorunsuz oynar. tweetId'ye gerek kalmaz.
