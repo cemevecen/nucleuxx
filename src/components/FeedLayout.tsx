@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Category } from "@/data/categories";
-import { MOCK_TWEETS, MediaItem } from "@/data/mockTweets";
+import { Tweet, MOCK_TWEETS, MediaItem } from "@/data/mockTweets";
 import CategoryColumn from "./CategoryColumn";
 
 interface Props {
@@ -11,12 +11,39 @@ interface Props {
   selectedChannels: Record<string, string[]>;
 }
 
+// Kategori başına tweet'leri API'den çeker; hata/boşlukta mock'a düşer.
+function useTweets(categories: Category[]) {
+  const [tweets, setTweets] = useState<Record<string, Tweet[]>>(() => {
+    const init: Record<string, Tweet[]> = {};
+    for (const cat of categories) init[cat.id] = MOCK_TWEETS[cat.id] ?? [];
+    return init;
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    for (const cat of categories) {
+      fetch(`/api/tweets/${cat.id}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data: Tweet[] | null) => {
+          if (!cancelled && Array.isArray(data) && data.length > 0) {
+            setTweets((prev) => ({ ...prev, [cat.id]: data }));
+          }
+        })
+        .catch(() => { /* mock zaten yüklü, sessizce devam */ });
+    }
+    return () => { cancelled = true; };
+  // categories referansı değiştiğinde yeniden fetch
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories.map((c) => c.id).join(",")]);
+
+  return tweets;
+}
+
 export default function FeedLayout({ categories, onMediaClick, selectedChannels }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const count = categories.length;
+  const tweets = useTweets(categories);
 
-  // ≤4 kategori: desktop'ta grid (kolonlar ekrana yayılır)
-  // 5+ kategori: yatay scroll ile sabit genişlik kolonlar
   const useGrid = count <= 4;
 
   const scroll = (dir: "left" | "right") => {
@@ -38,7 +65,7 @@ export default function FeedLayout({ categories, onMediaClick, selectedChannels 
             <div key={cat.id} className="snap-start flex-shrink-0 w-[88vw]" data-col>
               <CategoryColumn
                 category={cat}
-                tweets={MOCK_TWEETS[cat.id] ?? []}
+                tweets={tweets[cat.id] ?? []}
                 onMediaClick={onMediaClick}
                 selectedHandles={selectedChannels[cat.id] ?? []}
                 fluid
@@ -56,7 +83,7 @@ export default function FeedLayout({ categories, onMediaClick, selectedChannels 
             <CategoryColumn
               key={cat.id}
               category={cat}
-              tweets={MOCK_TWEETS[cat.id] ?? []}
+              tweets={tweets[cat.id] ?? []}
               onMediaClick={onMediaClick}
               selectedHandles={selectedChannels[cat.id] ?? []}
               fluid
@@ -108,7 +135,7 @@ export default function FeedLayout({ categories, onMediaClick, selectedChannels 
           <div key={cat.id} className="snap-start flex-shrink-0 w-[88vw] sm:w-[340px]" data-col>
             <CategoryColumn
               category={cat}
-              tweets={MOCK_TWEETS[cat.id] ?? []}
+              tweets={tweets[cat.id] ?? []}
               onMediaClick={onMediaClick}
               selectedHandles={selectedChannels[cat.id] ?? []}
             />
