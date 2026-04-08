@@ -6,6 +6,7 @@ import {
   findByEmail,
   findByProviderId,
   createUser,
+  mergeProviderIntoUser,
   verifyCredentialsLogin,
   hashPassword,
 } from "@/lib/userStore";
@@ -66,18 +67,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // OAuth ile giriş → DB'de kullanıcı oluştur/bul
       if (account?.provider === "google" && profile) {
         const p = profile as { sub?: string; email?: string; name?: string; picture?: string };
-        const existing = findByProviderId("google", p.sub ?? "");
-        if (!existing) {
-          const created = await createUser({
-            email: p.email ?? "",
-            name: p.name ?? "",
-            provider: "google",
-            providerId: p.sub,
-            image: p.picture,
-          });
-          user.id = created.id;
-        } else {
+        const sub = p.sub ?? "";
+        const existing = findByProviderId("google", sub);
+        if (existing) {
           user.id = existing.id;
+        } else {
+          const email = (p.email ?? "").trim().toLowerCase();
+          const byEmail = email ? findByEmail(email) : undefined;
+          if (byEmail) {
+            await mergeProviderIntoUser(byEmail.id, {
+              googleSub: sub,
+              image: p.picture,
+              name: p.name ?? undefined,
+            });
+            user.id = byEmail.id;
+          } else {
+            const created = await createUser({
+              email: email || `google-${sub.slice(0, 24)}@nucleuxx.local`,
+              name: p.name ?? "",
+              googleSub: sub,
+              image: p.picture,
+            });
+            user.id = created.id;
+          }
         }
       }
       if (account?.provider === "twitter" && profile) {
@@ -85,17 +97,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const data = (p.data ?? p) as Record<string, unknown>;
         const providerId = String(data.id ?? "");
         const existing = findByProviderId("twitter", providerId);
-        if (!existing) {
-          const created = await createUser({
-            email: user.email ?? `${data.username}@twitter`,
-            name: String(data.name ?? data.username ?? ""),
-            provider: "twitter",
-            providerId,
-            image: data.profile_image_url as string | undefined,
-          });
-          user.id = created.id;
-        } else {
+        if (existing) {
           user.id = existing.id;
+        } else {
+          const twEmailRaw = (user.email ?? `${data.username}@twitter`).trim().toLowerCase();
+          const canLinkByEmail =
+            twEmailRaw.includes("@") && !twEmailRaw.endsWith("@twitter");
+          const byEmail = canLinkByEmail ? findByEmail(twEmailRaw) : undefined;
+          if (byEmail) {
+            await mergeProviderIntoUser(byEmail.id, {
+              twitterId: providerId,
+              image: data.profile_image_url as string | undefined,
+              name: String(data.name ?? data.username ?? "") || undefined,
+            });
+            user.id = byEmail.id;
+          } else {
+            const created = await createUser({
+              email: twEmailRaw,
+              name: String(data.name ?? data.username ?? ""),
+              twitterId: providerId,
+              image: data.profile_image_url as string | undefined,
+            });
+            user.id = created.id;
+          }
         }
       }
       return true;
@@ -121,6 +145,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    /** Aynı hesap: birden fazla cihaz/tarayıcıda eşzamanlı oturum (JWT; sunucu tarafında tek oturum kilidi yok). */
+    maxAge: 30 * 24 * 60 * 60,
+  },
   secret: process.env.AUTH_SECRET,
 });

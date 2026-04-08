@@ -33,9 +33,15 @@ function avatarGradient(str: string) {
 }
 
 function providerLabel(provider: string) {
-  if (provider === "google") return { label: "Google", color: "bg-blue-500/15 text-blue-400 border-blue-500/20" };
-  if (provider === "twitter") return { label: "X (Twitter)", color: "bg-white/10 text-white/70 border-white/15" };
-  return { label: "Email", color: "bg-violet-500/15 text-violet-400 border-violet-500/20" };
+  if (provider.includes(" · "))
+    return { label: provider, color: "bg-white/10 text-white/80 border-white/15" };
+  if (provider === "google" || provider === "Google")
+    return { label: "Google", color: "bg-blue-500/15 text-blue-400 border-blue-500/20" };
+  if (provider === "twitter" || provider === "X")
+    return { label: "X (Twitter)", color: "bg-white/10 text-white/70 border-white/15" };
+  if (provider === "email" || provider === "E-posta")
+    return { label: "E-posta", color: "bg-violet-500/15 text-violet-400 border-violet-500/20" };
+  return { label: provider, color: "bg-white/10 text-white/80 border-white/15" };
 }
 
 function formatDate(iso: string) {

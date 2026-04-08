@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { findByEmail } from "@/lib/userStore";
+import { findByEmail, formatLinkedProviders } from "@/lib/userStore";
 
 /** Oturumdaki kullanıcı için profil verisi; başka e-posta ile sorgulanamaz. */
 export async function getUserData() {
@@ -14,7 +14,7 @@ export async function getUserData() {
 
   return {
     createdAt: user.createdAt,
-    provider: user.provider ?? "email",
+    provider: formatLinkedProviders(user),
     image: user.image ?? null,
   };
 }

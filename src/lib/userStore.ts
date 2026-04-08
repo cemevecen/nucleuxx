@@ -16,9 +16,12 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  passwordHash?: string;    // email+şifre kaydı
-  provider?: "google" | "twitter"; // OAuth kaydı
+  passwordHash?: string;
+  /** Eski kayıtlar için; yeni kod googleSub / twitterId kullanır */
+  provider?: "google" | "twitter";
   providerId?: string;
+  googleSub?: string;
+  twitterId?: string;
   image?: string;
   createdAt: string;
 }
@@ -40,8 +43,44 @@ export function findByEmail(email: string): User | undefined {
   return readUsers().find((u) => u.email === email);
 }
 
+export function findById(id: string): User | undefined {
+  return readUsers().find((u) => u.id === id);
+}
+
 export function findByProviderId(provider: string, providerId: string): User | undefined {
-  return readUsers().find((u) => u.provider === provider && u.providerId === providerId);
+  return readUsers().find((u) => {
+    if (provider === "google") {
+      return (
+        u.googleSub === providerId ||
+        (u.provider === "google" && u.providerId === providerId)
+      );
+    }
+    if (provider === "twitter") {
+      return (
+        u.twitterId === providerId ||
+        (u.provider === "twitter" && u.providerId === providerId)
+      );
+    }
+    return u.provider === provider && u.providerId === providerId;
+  });
+}
+
+/** Aynı e-posta ile e-posta/şifre hesabına Google veya X oturumu bağlar (çoklu giriş yöntemi). */
+export async function mergeProviderIntoUser(
+  userId: string,
+  merge: { googleSub?: string; twitterId?: string; image?: string; name?: string }
+): Promise<User | undefined> {
+  const users = readUsers();
+  const i = users.findIndex((u) => u.id === userId);
+  if (i === -1) return undefined;
+  const u: User = { ...users[i] };
+  if (merge.googleSub) u.googleSub = merge.googleSub;
+  if (merge.twitterId) u.twitterId = merge.twitterId;
+  if (merge.image) u.image = merge.image;
+  if (merge.name) u.name = merge.name;
+  users[i] = u;
+  writeUsers(users);
+  return u;
 }
 
 export async function createUser(data: Omit<User, "id" | "createdAt">): Promise<User> {
@@ -75,4 +114,18 @@ export async function verifyCredentialsLogin(
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
+}
+
+/** Profilde göstermek: bağlı giriş yöntemleri (çoklu giriş). */
+export function formatLinkedProviders(user: User): string {
+  const parts: string[] = [];
+  if (user.passwordHash) parts.push("E-posta");
+  if (user.googleSub) parts.push("Google");
+  if (user.twitterId) parts.push("X");
+  if (parts.length === 0) {
+    if (user.provider === "google") return "Google";
+    if (user.provider === "twitter") return "X";
+    return "E-posta";
+  }
+  return parts.join(" · ");
 }
