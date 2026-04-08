@@ -2,6 +2,8 @@
 
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
+import { getOAuthUiFlags } from "@/lib/costGuards";
 
 function parseAuthError(error: unknown): string {
   if (error instanceof AuthError) {
@@ -36,10 +38,12 @@ export async function loginWithCredentials(
 }
 
 export async function loginWithGoogle() {
+  if (!getOAuthUiFlags().google) redirect("/login");
   await signIn("google", { redirectTo: "/" });
 }
 
 export async function loginWithTwitter() {
+  if (!getOAuthUiFlags().twitter) redirect("/login");
   await signIn("twitter", { redirectTo: "/" });
 }
 

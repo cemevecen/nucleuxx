@@ -1,12 +1,16 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
+/** Vercel vb. ortamlarda Image Optimization isteklerini kapatır (hosting kotası). Yerelde genelde gerekmez. */
+const imageUnoptimized = process.env.NEXT_IMAGE_UNOPTIMIZED === "1" || process.env.NEXT_IMAGE_UNOPTIMIZED === "true";
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: imageUnoptimized,
     remotePatterns: [
       { protocol: "https", hostname: "unavatar.io" },
       { protocol: "https", hostname: "pbs.twimg.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "img.youtube.com" },
     ],

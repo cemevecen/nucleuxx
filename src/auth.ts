@@ -10,55 +10,82 @@ import {
   verifyCredentialsLogin,
   hashPassword,
 } from "@/lib/userStore";
+import { getOAuthUiFlags } from "@/lib/costGuards";
+
+const oauthFlags = getOAuthUiFlags();
+if (process.env.NODE_ENV === "development") {
+  if (oauthFlags.oauthGloballyDisabled) {
+    console.info(
+      "[nucluexx] AUTH_DISABLE_OAUTH aktif — Google/X OAuth kayıtlı değil (yerel kota koruması)."
+    );
+  } else {
+    if (!oauthFlags.google && (process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_SECRET)) {
+      console.warn("[nucluexx] Google OAuth: CLIENT_ID veya CLIENT_SECRET eksik — sağlayıcı atlandı.");
+    }
+    if (!oauthFlags.twitter && (process.env.TWITTER_CLIENT_ID || process.env.TWITTER_CLIENT_SECRET)) {
+      console.warn("[nucluexx] X OAuth: CLIENT_ID veya CLIENT_SECRET eksik — sağlayıcı atlandı.");
+    }
+  }
+}
+
+const providers = [
+  ...(oauthFlags.google
+    ? [
+        Google({
+          clientId: process.env.GOOGLE_CLIENT_ID!,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }),
+      ]
+    : []),
+  ...(oauthFlags.twitter
+    ? [
+        Twitter({
+          clientId: process.env.TWITTER_CLIENT_ID!,
+          clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+        }),
+      ]
+    : []),
+  Credentials({
+    id: "credentials",
+    name: "Email",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Şifre", type: "password" },
+      name: { label: "Ad", type: "text" },
+      mode: { label: "Mode", type: "text" }, // "login" | "register"
+    },
+    async authorize(credentials) {
+      const email = (credentials?.email as string)?.trim().toLowerCase();
+      const password = (credentials?.password as string);
+      const name = (credentials?.name as string)?.trim();
+      const mode = (credentials?.mode as string);
+
+      if (!email || !password) return null;
+      if (email.length > 254 || password.length > 128) return null;
+
+      if (mode === "register") {
+        if (findByEmail(email)) {
+          throw new Error("REGISTER_CONFLICT");
+        }
+        const passwordHash = await hashPassword(password);
+        const user = await createUser({
+          email,
+          name: name || email.split("@")[0],
+          passwordHash,
+        });
+        return { id: user.id, email: user.email, name: user.name };
+      }
+
+      const user = await verifyCredentialsLogin(email, password);
+      if (!user) throw new Error("CREDENTIALS_INVALID");
+      return { id: user.id, email: user.email, name: user.name, image: user.image };
+    },
+  }),
+];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Twitter({
-      clientId: process.env.TWITTER_CLIENT_ID!,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-    }),
-    Credentials({
-      id: "credentials",
-      name: "Email",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Şifre", type: "password" },
-        name: { label: "Ad", type: "text" },
-        mode: { label: "Mode", type: "text" }, // "login" | "register"
-      },
-      async authorize(credentials) {
-        const email = (credentials?.email as string)?.trim().toLowerCase();
-        const password = credentials?.password as string;
-        const name = (credentials?.name as string)?.trim();
-        const mode = credentials?.mode as string;
-
-        if (!email || !password) return null;
-        if (email.length > 254 || password.length > 128) return null;
-
-        if (mode === "register") {
-          if (findByEmail(email)) {
-            throw new Error("REGISTER_CONFLICT");
-          }
-          const passwordHash = await hashPassword(password);
-          const user = await createUser({
-            email,
-            name: name || email.split("@")[0],
-            passwordHash,
-          });
-          return { id: user.id, email: user.email, name: user.name };
-        }
-
-        const user = await verifyCredentialsLogin(email, password);
-        if (!user) throw new Error("CREDENTIALS_INVALID");
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
-      },
-    }),
-  ],
+  providers,
   pages: {
     signIn: "/login",
   },
