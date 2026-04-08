@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Tweet, MediaItem } from "@/data/mockTweets";
 import { formatTweetTime, formatCount } from "@/lib/timeAgo";
 import Image from "next/image";
@@ -11,6 +12,7 @@ interface Props {
 
 export default function TweetCard({ tweet, onMediaClick }: Props) {
   const media = tweet.media ?? [];
+  const [playingIdx, setPlayingIdx] = useState<number | null>(null);
 
   return (
     <article className="bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-2xl p-4 transition-all duration-200">
@@ -75,12 +77,11 @@ export default function TweetCard({ tweet, onMediaClick }: Props) {
             }`;
             const aspectStyle = { aspectRatio: media.length === 1 ? "16/9" : "4/3" };
 
-            // ── Video: feedde doğrudan oynar, detaya gitmeye gerek yok
+            // ── Video: default thumbnail + play, click → inline oynar
             if (isVideo) {
-              // Gerçek API url'i (video.twimg.com mp4) varsa inline <video>,
-              // yoksa (mock) Twitter embed fallback.
               const hasDirectVideo = !!item.url;
               const hasTwitterEmbed = !item.url && !!item.tweetId;
+              const isPlaying = playingIdx === i;
 
               return (
                 <div
@@ -88,31 +89,56 @@ export default function TweetCard({ tweet, onMediaClick }: Props) {
                   className={`relative overflow-hidden bg-black ${sizeClasses}`}
                   style={aspectStyle}
                 >
-                  {hasDirectVideo && (
+                  {/* Thumbnail — default görünüm */}
+                  {!isPlaying && (
+                    <>
+                      {item.thumbnail ? (
+                        <img
+                          src={item.thumbnail}
+                          alt=""
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 to-neutral-950" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setPlayingIdx(i)}
+                        className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/20 transition-colors"
+                        aria-label="Videoyu oynat"
+                      >
+                        <span className="w-14 h-14 rounded-full bg-black/70 border-2 border-white/90 flex items-center justify-center backdrop-blur-sm shadow-lg">
+                          <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                        <span className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] px-1.5 py-0.5 rounded font-mono uppercase tracking-wide">
+                          video
+                        </span>
+                      </button>
+                    </>
+                  )}
+
+                  {/* Oynatılıyor */}
+                  {isPlaying && hasDirectVideo && (
                     <video
                       src={item.url}
                       poster={item.thumbnail}
                       controls
+                      autoPlay
                       playsInline
                       preload="metadata"
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-contain bg-black"
                     />
                   )}
-                  {hasTwitterEmbed && (
+                  {isPlaying && hasTwitterEmbed && (
                     <iframe
-                      src={`https://platform.twitter.com/embed/Tweet.html?id=${item.tweetId}&theme=dark&chrome=nofooter`}
+                      src={`https://platform.twitter.com/embed/Tweet.html?id=${item.tweetId}&theme=dark&chrome=nofooter&hideCard=true&hideThread=true`}
                       title="Tweet video"
-                      className="absolute inset-0 w-full h-full border-0"
+                      className="absolute inset-0 w-full h-full border-0 bg-black"
                       scrolling="no"
                       allowFullScreen
-                    />
-                  )}
-                  {!hasDirectVideo && !hasTwitterEmbed && item.thumbnail && (
-                    <img
-                      src={item.thumbnail}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
                     />
                   )}
                 </div>
