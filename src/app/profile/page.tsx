@@ -14,7 +14,6 @@ export default async function ProfilePage() {
       name={session.user.name ?? ""}
       email={session.user.email ?? ""}
       image={session.user.image ?? null}
-      provider={userData?.provider ?? "E-posta"}
       linked={
         userData?.linked ?? {
           email: true,
