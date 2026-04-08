@@ -207,7 +207,7 @@ export default function ProfileClient({ name, email, image, provider, createdAt 
         {/* Actions */}
         <div className="space-y-3">
           <Link
-            href="/"
+            href="/?edit=channels"
             className="flex items-center justify-center gap-2 w-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 rounded-2xl px-4 py-3 text-white/70 hover:text-white text-sm font-medium transition-all"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { DEFAULT_CATEGORIES, Category } from "@/data/categories";
 import { MediaItem } from "@/data/mockTweets";
 import Onboarding from "@/components/Onboarding";
@@ -11,11 +12,13 @@ import MediaModal from "@/components/MediaModal";
 const STORAGE_KEY = "nucleuxx_categories";
 const CHANNELS_KEY = "nucleuxx_channels";
 
-export default function Home() {
+function HomeInner() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [selectedChannels, setSelectedChannels] = useState<Record<string, string[]>>({});
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [activeMedia, setActiveMedia] = useState<MediaItem | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -41,7 +44,13 @@ export default function Home() {
     } else {
       setShowOnboarding(true);
     }
-  }, []);
+
+    // Profil sayfasından "Kanalları Düzenle" ile gelen yönlendirme
+    if (searchParams.get("edit") === "channels") {
+      setShowOnboarding(true);
+      router.replace("/");
+    }
+  }, [searchParams, router]);
 
   const handleOnboardingComplete = (selected: Category[], channels: Record<string, string[]>) => {
     const ids = selected.map((c) => c.id);
@@ -103,5 +112,13 @@ export default function Home() {
         <MediaModal item={activeMedia} onClose={handleCloseMedia} />
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeInner />
+    </Suspense>
   );
 }
