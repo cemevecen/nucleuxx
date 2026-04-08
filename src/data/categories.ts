@@ -8,7 +8,7 @@ export interface Category {
   id: string;
   name: string;
   emoji: string;
-  color: string;
+  gradient: { from: string; to: string };
   accounts: TwitterAccount[];
 }
 
@@ -17,7 +17,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "ai",
     name: "Yapay Zeka",
     emoji: "🤖",
-    color: "from-violet-500 to-purple-700",
+    gradient: { from: "#8b5cf6", to: "#7e22ce" },
     accounts: [
       { handle: "emrekiciman",    name: "Emre Kıcıman",         avatar: "https://unavatar.io/twitter/emrekiciman" },
       { handle: "deeplearningtr", name: "Deep Learning TR",      avatar: "https://unavatar.io/twitter/deeplearningtr" },
@@ -35,7 +35,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "tech",
     name: "Teknoloji",
     emoji: "💻",
-    color: "from-blue-500 to-cyan-600",
+    gradient: { from: "#3b82f6", to: "#0891b2" },
     accounts: [
       { handle: "webrazzi",       name: "Webrazzi",              avatar: "https://unavatar.io/twitter/webrazzi" },
       { handle: "shiftdelete_net",name: "ShiftDelete",           avatar: "https://unavatar.io/twitter/shiftdelete_net" },
@@ -53,7 +53,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "crypto",
     name: "Kripto",
     emoji: "₿",
-    color: "from-orange-500 to-yellow-600",
+    gradient: { from: "#f97316", to: "#ca8a04" },
     accounts: [
       { handle: "kriptokoin",     name: "Kripto Koin",           avatar: "https://unavatar.io/twitter/kriptokoin" },
       { handle: "cointurk_net",   name: "CoinTurk",              avatar: "https://unavatar.io/twitter/cointurk_net" },
@@ -71,7 +71,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "economy",
     name: "Ekonomi",
     emoji: "📈",
-    color: "from-green-500 to-emerald-700",
+    gradient: { from: "#22c55e", to: "#047857" },
     accounts: [
       { handle: "mahfiegilmez",   name: "Mahfi Eğilmez",         avatar: "https://unavatar.io/twitter/mahfiegilmez" },
       { handle: "ugurses",        name: "Uğur Gürses",           avatar: "https://unavatar.io/twitter/ugurses" },
@@ -89,7 +89,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "turkey",
     name: "Türkiye",
     emoji: "🇹🇷",
-    color: "from-red-500 to-rose-700",
+    gradient: { from: "#ef4444", to: "#be123c" },
     accounts: [
       { handle: "fatihaltayli",   name: "Fatih Altaylı",         avatar: "https://unavatar.io/twitter/fatihaltayli" },
       { handle: "anadoluajansi",  name: "Anadolu Ajansı",        avatar: "https://unavatar.io/twitter/anadoluajansi" },
@@ -107,7 +107,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "science",
     name: "Bilim",
     emoji: "🔬",
-    color: "from-teal-500 to-sky-600",
+    gradient: { from: "#14b8a6", to: "#0284c7" },
     accounts: [
       { handle: "tubitak_gov_tr", name: "TÜBİTAK",              avatar: "https://unavatar.io/twitter/tubitak_gov_tr" },
       { handle: "itu_edu_tr",     name: "İTÜ",                  avatar: "https://unavatar.io/twitter/itu_edu_tr" },
@@ -125,7 +125,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     id: "design",
     name: "Tasarım",
     emoji: "🎨",
-    color: "from-pink-500 to-fuchsia-700",
+    gradient: { from: "#ec4899", to: "#a21caf" },
     accounts: [
       { handle: "uxturkiye",      name: "UX Türkiye",            avatar: "https://unavatar.io/twitter/uxturkiye" },
       { handle: "tasarimhaber",   name: "Tasarım Haber",         avatar: "https://unavatar.io/twitter/tasarimhaber" },

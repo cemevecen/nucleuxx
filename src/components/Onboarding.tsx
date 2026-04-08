@@ -70,7 +70,10 @@ export default function Onboarding({ onComplete }: Props) {
                     </svg>
                   </div>
                 )}
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-xl mb-3`}>
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-3"
+                  style={{ backgroundImage: `linear-gradient(to bottom right, ${cat.gradient.from}, ${cat.gradient.to})` }}
+                >
                   {cat.emoji}
                 </div>
                 <p className="font-semibold text-white text-sm">{cat.name}</p>

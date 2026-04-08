@@ -14,7 +14,10 @@ export default function CategoryColumn({ category, tweets, onMediaClick }: Props
   return (
     <div className="flex-shrink-0 w-[88vw] sm:w-[340px]">
       {/* Kolon başlığı */}
-      <div className={`bg-gradient-to-r ${category.color} rounded-2xl p-4 mb-3 flex items-center gap-3`}>
+      <div
+        className="rounded-2xl p-4 mb-3 flex items-center gap-3"
+        style={{ backgroundImage: `linear-gradient(to right, ${category.gradient.from}, ${category.gradient.to})` }}
+      >
         <span className="text-2xl">{category.emoji}</span>
         <div>
           <h2 className="font-bold text-white text-base leading-tight">{category.name}</h2>
