@@ -37,7 +37,6 @@ export default function Navbar({ categories }: Props) {
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Profile link */}
         <Link
           href="/profile"
           className="w-8 h-8 rounded-full bg-white/10 border border-white/15 hover:border-white/30 flex items-center justify-center transition-all overflow-hidden"
@@ -47,6 +46,15 @@ export default function Navbar({ categories }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </Link>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="text-xs font-medium text-white/45 hover:text-white/90 border border-white/10 hover:border-white/25 rounded-full px-3 py-1.5 transition-colors"
+            title="Oturumu kapat"
+          >
+            Çıkış
+          </button>
+        </form>
       </div>
     </header>
   );

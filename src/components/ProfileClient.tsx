@@ -4,11 +4,7 @@ import { useState, useEffect, useRef, useActionState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { setCredentialsPasswordFromProfile } from "@/app/actions/password";
-import {
-  logout,
-  linkGoogleFromProfile,
-  linkTwitterFromProfile,
-} from "@/app/actions/auth";
+import { logout } from "@/app/actions/auth";
 import { DEFAULT_CATEGORIES } from "@/data/categories";
 
 const STORAGE_KEY = "nucleuxx_categories";
@@ -184,9 +180,8 @@ export default function ProfileClient({
               </span>
             </div>
             <p className="text-white/35 text-[11px] leading-snug mb-3">
-              Sadece Google veya X ile kayıt olduysan giriş sayfasında e-posta/şifre çalışmaz — önce aşağıdan{" "}
-              <span className="text-white/50">şifre belirle</span>. Google/X bağlarken{" "}
-              <span className="text-white/55">{email}</span> ile aynı e-posta kullanılmalı (X bazen vermez).
+              Başka Google veya X hesabı ile giriş için önce <span className="text-white/50">Çıkış yap</span>, ardından giriş
+              sayfasından istediğin yöntemi seç. Bu ekranda yalnızca bilgi gösterilir; tekrar giriş istemez.
             </p>
             <div className="flex flex-wrap gap-2">
               <span
@@ -198,34 +193,24 @@ export default function ProfileClient({
               >
                 {linked.email ? "E-posta + şifre" : "E-posta + şifre —"}
               </span>
-              {linked.google ? (
-                <span className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border bg-blue-500/15 text-blue-300 border-blue-500/25">
-                  Google
-                </span>
-              ) : (
-                <form action={linkGoogleFromProfile} className="inline">
-                  <button
-                    type="submit"
-                    className="text-xs font-medium px-2.5 py-1.5 rounded-full border border-blue-500/40 text-blue-300 hover:bg-blue-500/10 transition-colors"
-                  >
-                    Google bağla
-                  </button>
-                </form>
-              )}
-              {linked.twitter ? (
-                <span className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border bg-white/10 text-white/80 border-white/15">
-                  X
-                </span>
-              ) : (
-                <form action={linkTwitterFromProfile} className="inline">
-                  <button
-                    type="submit"
-                    className="text-xs font-medium px-2.5 py-1.5 rounded-full border border-white/20 text-white/70 hover:bg-white/10 transition-colors"
-                  >
-                    X bağla
-                  </button>
-                </form>
-              )}
+              <span
+                className={`inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border ${
+                  linked.google
+                    ? "bg-blue-500/15 text-blue-300 border-blue-500/25"
+                    : "bg-white/5 text-white/35 border-white/10"
+                }`}
+              >
+                {linked.google ? "Google" : "Google —"}
+              </span>
+              <span
+                className={`inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-full border ${
+                  linked.twitter
+                    ? "bg-white/10 text-white/80 border-white/15"
+                    : "bg-white/5 text-white/35 border-white/10"
+                }`}
+              >
+                {linked.twitter ? "X" : "X —"}
+              </span>
             </div>
 
             {!linked.email && (

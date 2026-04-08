@@ -1,6 +1,6 @@
 "use server";
 
-import { auth, signIn, signOut } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 
 function parseAuthError(error: unknown): string {
@@ -41,31 +41,6 @@ export async function loginWithGoogle() {
 
 export async function loginWithTwitter() {
   await signIn("twitter", { redirectTo: "/" });
-}
-
-/** Profilde oturum açıkken Google / X hesabını aynı kullanıcıya bağlamak için (OAuth dönüşü /profile). */
-export async function linkGoogleFromProfile() {
-  const session = await auth();
-  const email = session?.user?.email?.trim();
-  await signIn("google", {
-    redirectTo: "/profile",
-    ...(email ? { authorizationParams: { login_hint: email } } : {}),
-  });
-}
-
-export async function linkTwitterFromProfile() {
-  const session = await auth();
-  const email = session?.user?.email?.trim();
-  await signIn("twitter", {
-    redirectTo: "/profile",
-    ...(email
-      ? {
-          authorizationParams: {
-            login_hint: email,
-          },
-        }
-      : {}),
-  });
 }
 
 export async function logout() {
