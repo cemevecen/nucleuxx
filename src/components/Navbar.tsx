@@ -49,18 +49,16 @@ export default function Navbar({ categories, onEditChannels }: Props) {
           <span className="hidden sm:inline">Düzenle</span>
         </button>
 
-        {/* Logout */}
-        <form action={logout}>
-          <button
-            type="submit"
-            className="flex items-center gap-1.5 text-white/30 hover:text-white/70 text-xs transition-colors border border-white/5 hover:border-white/15 rounded-full px-3 sm:px-4 py-2"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="hidden sm:inline">Çıkış</span>
-          </button>
-        </form>
+        {/* Profile link */}
+        <Link
+          href="/profile"
+          className="w-8 h-8 rounded-full bg-white/10 border border-white/15 hover:border-white/30 flex items-center justify-center transition-all overflow-hidden"
+          title="Profil"
+        >
+          <svg className="w-4 h-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </Link>
       </div>
     </header>
   );
