@@ -96,7 +96,7 @@ function HomeInner() {
 
       {!showOnboarding && categories && (
         <>
-          <Navbar categories={categories} onEditChannels={() => setShowOnboarding(true)} />
+          <Navbar categories={categories} />
           <main className="flex-1 py-3 sm:py-4">
             <FeedLayout
               categories={categories}
