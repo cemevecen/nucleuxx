@@ -9,15 +9,16 @@ interface Props {
   tweets: Tweet[];
   onMediaClick: (item: MediaItem) => void;
   selectedHandles: string[];
+  fluid?: boolean;
 }
 
-export default function CategoryColumn({ category, tweets, onMediaClick, selectedHandles }: Props) {
+export default function CategoryColumn({ category, tweets, onMediaClick, selectedHandles, fluid }: Props) {
   const filteredTweets = selectedHandles.length > 0
     ? tweets.filter((t) => selectedHandles.includes(t.authorHandle))
     : tweets;
 
   return (
-    <div className="flex-shrink-0 w-[88vw] sm:w-[340px]">
+    <div className={fluid ? "w-full min-w-0" : "flex-shrink-0 w-[88vw] sm:w-[340px]"}>
       {/* Kolon başlığı */}
       <div
         className="rounded-2xl p-4 mb-3 flex items-center gap-3"

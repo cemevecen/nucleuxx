@@ -13,16 +13,70 @@ interface Props {
 
 export default function FeedLayout({ categories, onMediaClick, selectedChannels }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const count = categories.length;
+
+  // ≤4 kategori: desktop'ta grid (kolonlar ekrana yayılır)
+  // 5+ kategori: yatay scroll ile sabit genişlik kolonlar
+  const useGrid = count <= 4;
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
-    const colWidth = scrollRef.current.querySelector("div")?.offsetWidth ?? 340;
+    const col = scrollRef.current.querySelector<HTMLElement>("[data-col]");
+    const colWidth = col?.offsetWidth ?? 340;
     scrollRef.current.scrollBy({ left: dir === "right" ? colWidth + 16 : -(colWidth + 16), behavior: "smooth" });
   };
 
+  if (useGrid) {
+    return (
+      <>
+        {/* Mobile: snap scroll tek kolon */}
+        <div
+          className="flex sm:hidden gap-4 overflow-x-auto px-4 pb-6 snap-x snap-mandatory"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {categories.map((cat) => (
+            <div key={cat.id} className="snap-start flex-shrink-0 w-[88vw]" data-col>
+              <CategoryColumn
+                category={cat}
+                tweets={MOCK_TWEETS[cat.id] ?? []}
+                onMediaClick={onMediaClick}
+                selectedHandles={selectedChannels[cat.id] ?? []}
+                fluid
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: grid — kolonlar eşit genişlikte, ekrana yayılır */}
+        <div
+          className="hidden sm:grid gap-4 px-4 pb-6"
+          style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` }}
+        >
+          {categories.map((cat) => (
+            <CategoryColumn
+              key={cat.id}
+              category={cat}
+              tweets={MOCK_TWEETS[cat.id] ?? []}
+              onMediaClick={onMediaClick}
+              selectedHandles={selectedChannels[cat.id] ?? []}
+              fluid
+            />
+          ))}
+        </div>
+
+        {/* Mobile dot indicators */}
+        <div className="flex sm:hidden justify-center gap-1.5 pt-1 pb-3">
+          {categories.map((cat) => (
+            <div key={cat.id} className="w-1.5 h-1.5 rounded-full bg-white/20" />
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // 5+ kategori: yatay scroll
   return (
     <div className="relative">
-      {/* Scroll arrows */}
       <button
         onClick={() => scroll("left")}
         className="hidden sm:flex absolute left-2 top-24 z-20 w-9 h-9 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all shadow-xl"
@@ -42,18 +96,16 @@ export default function FeedLayout({ categories, onMediaClick, selectedChannels 
         </svg>
       </button>
 
-      {/* Fade edges */}
       <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
       <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#0a0a0f] to-transparent z-10 pointer-events-none" />
 
-      {/* Kolonlar — yatay scroll, dikey doğal yükseklik */}
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto px-4 sm:px-12 pb-6 snap-x snap-mandatory sm:snap-none"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        style={{ scrollbarWidth: "none" }}
       >
         {categories.map((cat) => (
-          <div key={cat.id} className="snap-start flex-shrink-0">
+          <div key={cat.id} className="snap-start flex-shrink-0 w-[88vw] sm:w-[340px]" data-col>
             <CategoryColumn
               category={cat}
               tweets={MOCK_TWEETS[cat.id] ?? []}
@@ -64,7 +116,6 @@ export default function FeedLayout({ categories, onMediaClick, selectedChannels 
         ))}
       </div>
 
-      {/* Mobile dot indicators */}
       <div className="flex sm:hidden justify-center gap-1.5 pt-1 pb-3">
         {categories.map((cat) => (
           <div key={cat.id} className="w-1.5 h-1.5 rounded-full bg-white/20" />

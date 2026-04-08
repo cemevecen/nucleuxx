@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Category } from "@/data/categories";
 import { logout } from "@/app/actions/auth";
 
@@ -21,12 +22,13 @@ export default function Navbar({ categories, onEditChannels }: Props) {
       {/* Channel pills — hidden on mobile */}
       <div className="hidden lg:flex items-center gap-2 overflow-hidden flex-1 mx-4">
         {categories.map((cat) => (
-          <div
+          <Link
             key={cat.id}
-            className="flex items-center bg-white/5 border border-white/10 rounded-full px-3 py-1 flex-shrink-0"
+            href={`/category/${cat.id}`}
+            className="flex items-center bg-white/5 border border-white/10 hover:border-white/25 hover:bg-white/10 rounded-full px-3 py-1 flex-shrink-0 transition-all"
           >
-            <span className="text-white/60 text-xs font-medium">{cat.name}</span>
-          </div>
+            <span className="text-white/60 hover:text-white/90 text-xs font-medium transition-colors">{cat.name}</span>
+          </Link>
         ))}
       </div>
 
