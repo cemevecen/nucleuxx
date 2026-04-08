@@ -1,10 +1,17 @@
 "use server";
 
+import { auth } from "@/auth";
 import { findByEmail } from "@/lib/userStore";
 
-export async function getUserData(email: string) {
+/** Oturumdaki kullanıcı için profil verisi; başka e-posta ile sorgulanamaz. */
+export async function getUserData() {
+  const session = await auth();
+  const email = session?.user?.email?.trim().toLowerCase();
+  if (!email) return null;
+
   const user = findByEmail(email);
   if (!user) return null;
+
   return {
     createdAt: user.createdAt,
     provider: user.provider ?? "email",

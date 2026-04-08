@@ -6,11 +6,12 @@ import {
   findByEmail,
   findByProviderId,
   createUser,
-  verifyPassword,
+  verifyCredentialsLogin,
   hashPassword,
 } from "@/lib/userStore";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -36,10 +37,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const mode = credentials?.mode as string;
 
         if (!email || !password) return null;
+        if (email.length > 254 || password.length > 128) return null;
 
         if (mode === "register") {
           if (findByEmail(email)) {
-            throw new Error("Bu email zaten kayıtlı.");
+            throw new Error("REGISTER_CONFLICT");
           }
           const passwordHash = await hashPassword(password);
           const user = await createUser({
@@ -50,10 +52,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return { id: user.id, email: user.email, name: user.name };
         }
 
-        // Login
-        const user = findByEmail(email);
-        if (!user) throw new Error("Bu email ile kayıtlı hesap yok.");
-        if (!await verifyPassword(user, password)) throw new Error("Şifre hatalı.");
+        const user = await verifyCredentialsLogin(email, password);
+        if (!user) throw new Error("CREDENTIALS_INVALID");
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),
