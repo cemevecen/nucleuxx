@@ -16,8 +16,10 @@ export default auth((req) => {
   return NextResponse.next();
 });
 
+/**
+ * Sadece uygulama sayfaları — /api/* (NextAuth OAuth, callback) middleware'den tamamen muaf.
+ * Aksi halde signIn / callback sırasında req.auth boş görünüp /login'e düşülebiliyordu.
+ */
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
-  ],
+  matcher: ["/", "/login", "/profile", "/category/:path*"],
 };
