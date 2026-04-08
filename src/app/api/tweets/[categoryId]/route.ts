@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_CATEGORIES } from "@/data/categories";
 import { MOCK_TWEETS } from "@/data/mockTweets";
-import { fetchTweetsByHandles } from "@/lib/twitter";
+import { fetchRssForHandles } from "@/lib/rss";
 
-// 1 saat CDN / edge cache
 export const revalidate = 3600;
 
 export async function GET(
@@ -17,29 +16,29 @@ export async function GET(
     return NextResponse.json({ error: "Kategori bulunamadı" }, { status: 404 });
   }
 
-  // Bearer token yoksa mock'a düş
-  if (!process.env.TWITTER_BEARER_TOKEN && !process.env.X_BEARER_TOKEN) {
-    const mock = MOCK_TWEETS[categoryId] ?? [];
-    return NextResponse.json(mock, {
-      headers: { "X-Data-Source": "mock" },
-    });
-  }
-
   const handles = category.accounts.map((a) => a.handle);
-  const tweets = await fetchTweetsByHandles(handles, 15);
 
-  // API başarısız olduysa mock'a düş
-  if (tweets.length === 0) {
-    const mock = MOCK_TWEETS[categoryId] ?? [];
-    return NextResponse.json(mock, {
-      headers: { "X-Data-Source": "mock-fallback" },
+  // 1. RSS ile gerçek içerik
+  const rss = await fetchRssForHandles(handles);
+  if (rss.length > 0) {
+    // RSS desteklemeyen hesaplar için mock tweet'leri ekle
+    const rssHandles = new Set(rss.map((t) => t.authorHandle));
+    const mockFill = (MOCK_TWEETS[categoryId] ?? []).filter(
+      (t) => !rssHandles.has(t.authorHandle)
+    );
+    const merged = [...rss, ...mockFill].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    return NextResponse.json(merged, {
+      headers: {
+        "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400",
+        "X-Data-Source": "rss",
+      },
     });
   }
 
-  return NextResponse.json(tweets, {
-    headers: {
-      "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400",
-      "X-Data-Source": "twitter-api",
-    },
+  // 2. Fallback: mock
+  return NextResponse.json(MOCK_TWEETS[categoryId] ?? [], {
+    headers: { "X-Data-Source": "mock-fallback" },
   });
 }
