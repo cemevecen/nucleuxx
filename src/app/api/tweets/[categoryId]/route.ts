@@ -3,7 +3,11 @@ import { auth } from "@/auth";
 import { DEFAULT_CATEGORIES } from "@/data/categories";
 import { MOCK_TWEETS } from "@/data/mockTweets";
 import { fetchRssForHandles } from "@/lib/rss";
-import { fetchRapidTweetsForCategory, isRapidTwitterConfigured } from "@/lib/rapidTwitter";
+import {
+  fetchRapidTweetsForCategory,
+  getRapidRatePolicySummary,
+  isRapidTwitterConfigured,
+} from "@/lib/rapidTwitter";
 
 /** Canlı timeline: RapidAPI + RSS için kısa önbellek; CDN’de kullanıcıya özel cache yok. */
 export const dynamic = "force-dynamic";
@@ -28,6 +32,7 @@ export async function GET(
 
   // 1. RapidAPI (twitter-api45 timeline) — gerçek zamanlı X gönderileri
   if (isRapidTwitterConfigured()) {
+    const policy = getRapidRatePolicySummary();
     const rapid = await fetchRapidTweetsForCategory(category.accounts);
     if (rapid.length > 0) {
       const rapidHandles = new Set(rapid.map((t) => t.authorHandle));
@@ -37,10 +42,14 @@ export async function GET(
       const merged = [...rapid, ...mockFill].sort(
         (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
+      const maxAge = Math.min(300, Math.max(15, policy.cacheTtlSec));
       return NextResponse.json(merged, {
         headers: {
-          "Cache-Control": "private, max-age=60",
+          "Cache-Control": `private, max-age=${maxAge}`,
           "X-Data-Source": "rapidapi-twitter",
+          "X-Rapid-Cache-TTL-Sec": String(policy.cacheTtlSec),
+          "X-Rapid-Min-Delay-Ms": String(policy.minDelayMs),
+          "X-Rapid-Max-Handles": String(policy.maxHandles),
         },
       });
     }

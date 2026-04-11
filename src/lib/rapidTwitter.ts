@@ -6,6 +6,13 @@ import type { MediaItem, Tweet } from "@/data/mockTweets";
 const DEFAULT_HOST = "twitter-api45.p.rapidapi.com";
 const DEFAULT_PATH = "/timeline.php";
 
+/** Aynı Node sürecinde son timeline yanıtları (serverless’ta istek başına soğuk olabilir). */
+const memoryCache = new Map<string, { ts: number; tweets: Tweet[] }>();
+const MAX_CACHE_ENTRIES = 120;
+
+/** Küresel: iki RapidAPI HTTP çağrısı arası minimum süre (rate limit dostu). */
+let lastHttpRequestAt = 0;
+
 function envInt(name: string, fallback: number): number {
   const v = process.env[name];
   if (v == null || v === "") return fallback;
@@ -13,11 +20,67 @@ function envInt(name: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function effectiveMinDelayMs(): number {
+  const rawDelay = process.env.RAPIDAPI_MIN_DELAY_MS;
+  if (rawDelay === "0") return 0;
+  if (rawDelay != null && rawDelay !== "") {
+    const n = Number(rawDelay);
+    if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  }
+  const rpm = envInt("RAPIDAPI_REQUESTS_PER_MINUTE", 0);
+  if (rpm > 0) return Math.max(250, Math.ceil(60_000 / rpm));
+  return 2000;
+}
+
+async function throttleGlobalHttp(): Promise<void> {
+  const minGap = effectiveMinDelayMs();
+  if (minGap <= 0) return;
+  const now = Date.now();
+  const elapsed = now - lastHttpRequestAt;
+  const wait = minGap - elapsed;
+  if (wait > 0) await sleep(wait);
+  lastHttpRequestAt = Date.now();
+}
+
+function cacheGet(handleKey: string, ttlSec: number): Tweet[] | null {
+  const row = memoryCache.get(handleKey);
+  if (!row) return null;
+  if (Date.now() - row.ts > ttlSec * 1000) {
+    memoryCache.delete(handleKey);
+    return null;
+  }
+  return row.tweets;
+}
+
+function cacheSet(handleKey: string, tweets: Tweet[]): void {
+  if (memoryCache.size >= MAX_CACHE_ENTRIES) {
+    const first = memoryCache.keys().next().value;
+    if (first) memoryCache.delete(first);
+  }
+  memoryCache.set(handleKey, { ts: Date.now(), tweets });
+}
+
 export function isRapidTwitterConfigured(): boolean {
   return !!process.env.RAPIDAPI_KEY?.trim();
 }
 
-/** API yanıtından tweet benzeri nesne dizisini çıkarır (twitter-api45 yapısına toleranslı). */
+/** Kota / gecikme ayarlarının özeti (log ve HTTP başlığı için). */
+export function getRapidRatePolicySummary(): {
+  cacheTtlSec: number;
+  minDelayMs: number;
+  maxHandles: number;
+} {
+  return {
+    cacheTtlSec: envInt("RAPIDAPI_CACHE_TTL_SECONDS", 120),
+    minDelayMs: effectiveMinDelayMs(),
+    maxHandles: envInt("RAPIDAPI_TWITTER_MAX_HANDLES", 6),
+  };
+}
+
 function extractStatusArray(payload: unknown): Record<string, unknown>[] {
   if (payload == null) return [];
   if (Array.isArray(payload)) {
@@ -174,16 +237,26 @@ function mapOne(
   };
 }
 
+function parseTimelineJson(json: unknown, clean: string, account: TwitterAccount): Tweet[] {
+  const rows = extractStatusArray(json);
+  const tweets: Tweet[] = [];
+  for (const row of rows) {
+    const t = mapOne(row, clean, account);
+    if (t) tweets.push(t);
+  }
+  tweets.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return tweets;
+}
+
 /**
- * Tek hesap için twitter-api45 timeline (RapidAPI).
- * Anahtar yoksa boş döner.
+ * Tek HTTP çağrısı — küresel throttle + 429’da sınırlı yeniden deneme.
  */
-export async function fetchRapidTimelineForHandle(
+async function fetchRapidTimelineNetworkOnce(
   handle: string,
   account: TwitterAccount
-): Promise<Tweet[]> {
+): Promise<{ ok: boolean; status: number; tweets: Tweet[] }> {
   const key = process.env.RAPIDAPI_KEY?.trim();
-  if (!key) return [];
+  if (!key) return { ok: false, status: 0, tweets: [] };
 
   const host = process.env.RAPIDAPI_TWITTER_HOST?.trim() || DEFAULT_HOST;
   const path = process.env.RAPIDAPI_TWITTER_TIMELINE_PATH?.trim() || DEFAULT_PATH;
@@ -191,6 +264,8 @@ export async function fetchRapidTimelineForHandle(
 
   const url = new URL(`https://${host}${path}`);
   url.searchParams.set("screenname", clean);
+
+  await throttleGlobalHttp();
 
   const res = await fetch(url.toString(), {
     method: "GET",
@@ -201,45 +276,91 @@ export async function fetchRapidTimelineForHandle(
     cache: "no-store",
   });
 
+  if (res.status === 429) {
+    return { ok: false, status: 429, tweets: [] };
+  }
+
   if (!res.ok) {
     if (process.env.NODE_ENV === "development") {
       console.warn(`[rapidTwitter] ${clean}: HTTP ${res.status}`);
     }
-    return [];
+    return { ok: false, status: res.status, tweets: [] };
   }
 
   let json: unknown;
   try {
     json = await res.json();
   } catch {
-    return [];
+    return { ok: false, status: res.status, tweets: [] };
   }
 
-  const rows = extractStatusArray(json);
-  const tweets: Tweet[] = [];
-  for (const row of rows) {
-    const t = mapOne(row, clean, account);
-    if (t) tweets.push(t);
+  return {
+    ok: true,
+    status: res.status,
+    tweets: parseTimelineJson(json, clean, account),
+  };
+}
+
+async function fetchRapidTimelineNetwork(
+  handle: string,
+  account: TwitterAccount
+): Promise<Tweet[]> {
+  const retries = envInt("RAPIDAPI_429_RETRIES", 1);
+  const backoffMs = envInt("RAPIDAPI_429_BACKOFF_MS", 3500);
+
+  let attempt = await fetchRapidTimelineNetworkOnce(handle, account);
+  if (attempt.ok) return attempt.tweets;
+
+  if (attempt.status === 429 && retries > 0) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`[rapidTwitter] 429 — ${backoffMs}ms sonra tekrar`);
+    }
+    await sleep(backoffMs);
+    attempt = await fetchRapidTimelineNetworkOnce(handle, account);
+    if (attempt.ok) return attempt.tweets;
   }
 
-  tweets.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return [];
+}
+
+/**
+ * Önbellek + sıralı çağrı (kategori içinde). Güncel içerik TTL dolunca yeniden çekilir.
+ */
+export async function fetchRapidTimelineForHandle(
+  handle: string,
+  account: TwitterAccount
+): Promise<Tweet[]> {
+  if (!isRapidTwitterConfigured()) return [];
+
+  const host = process.env.RAPIDAPI_TWITTER_HOST?.trim() || DEFAULT_HOST;
+  const path = process.env.RAPIDAPI_TWITTER_TIMELINE_PATH?.trim() || DEFAULT_PATH;
+  const clean = handle.replace(/^@/, "");
+  const cacheKey = `${host}|${path}|${clean}`;
+  const ttlSec = envInt("RAPIDAPI_CACHE_TTL_SECONDS", 120);
+
+  const hit = cacheGet(cacheKey, ttlSec);
+  if (hit) return hit;
+
+  const tweets = await fetchRapidTimelineNetwork(handle, account);
+  cacheSet(cacheKey, tweets);
   return tweets;
 }
 
-/** Kategori: en fazla N hesap için paralel timeline, birleşik akış. */
+/**
+ * Kategori: hesaplar sırayla işlenir (aynı istek içinde patlama yok);
+ * her hesap için TTL önbelleği ayrı. Birden fazla kategori aynı anda istenirse
+ * paralellik hâlâ olabilir — düşük planlarda RAPIDAPI_REQUESTS_PER_MINUTE ile sıkılaştır.
+ */
 export async function fetchRapidTweetsForCategory(accounts: TwitterAccount[]): Promise<Tweet[]> {
   if (!isRapidTwitterConfigured() || accounts.length === 0) return [];
 
   const maxHandles = envInt("RAPIDAPI_TWITTER_MAX_HANDLES", 6);
   const slice = accounts.slice(0, Math.min(maxHandles, accounts.length));
 
-  const settled = await Promise.allSettled(
-    slice.map((acc) => fetchRapidTimelineForHandle(acc.handle, acc))
-  );
-
   const merged: Tweet[] = [];
-  for (const s of settled) {
-    if (s.status === "fulfilled") merged.push(...s.value);
+  for (const acc of slice) {
+    const tw = await fetchRapidTimelineForHandle(acc.handle, acc);
+    merged.push(...tw);
   }
 
   merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
