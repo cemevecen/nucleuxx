@@ -33,6 +33,10 @@ const links = [
     title: "Vercel — dashboard (deploy ediyorsan bant / Image Optimization)",
     url: "https://vercel.com/dashboard",
   },
+  {
+    title: "RapidAPI — abonelik ve kullanım (twitter-api45 kota/ücret)",
+    url: "https://rapidapi.com/developer/billing",
+  },
 ];
 
 console.log("nucleuxx — periyodik kontrol linkleri\n");

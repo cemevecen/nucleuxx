@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { DEFAULT_CATEGORIES } from "@/data/categories";
 import { MOCK_TWEETS } from "@/data/mockTweets";
 import { fetchRssForHandles } from "@/lib/rss";
+import { fetchRapidTweetsForCategory, isRapidTwitterConfigured } from "@/lib/rapidTwitter";
 
-export const revalidate = 3600;
+/** Canlı timeline: RapidAPI + RSS için kısa önbellek; CDN’de kullanıcıya özel cache yok. */
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ categoryId: string }> }
 ) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Oturum gerekli" }, { status: 401 });
+  }
+
   const { categoryId } = await params;
 
   const category = DEFAULT_CATEGORIES.find((c) => c.id === categoryId);
@@ -18,10 +26,29 @@ export async function GET(
 
   const handles = category.accounts.map((a) => a.handle);
 
-  // 1. RSS ile gerçek içerik
+  // 1. RapidAPI (twitter-api45 timeline) — gerçek zamanlı X gönderileri
+  if (isRapidTwitterConfigured()) {
+    const rapid = await fetchRapidTweetsForCategory(category.accounts);
+    if (rapid.length > 0) {
+      const rapidHandles = new Set(rapid.map((t) => t.authorHandle));
+      const mockFill = (MOCK_TWEETS[categoryId] ?? []).filter(
+        (t) => !rapidHandles.has(t.authorHandle)
+      );
+      const merged = [...rapid, ...mockFill].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      return NextResponse.json(merged, {
+        headers: {
+          "Cache-Control": "private, max-age=60",
+          "X-Data-Source": "rapidapi-twitter",
+        },
+      });
+    }
+  }
+
+  // 2. RSS
   const rss = await fetchRssForHandles(handles);
   if (rss.length > 0) {
-    // RSS desteklemeyen hesaplar için mock tweet'leri ekle
     const rssHandles = new Set(rss.map((t) => t.authorHandle));
     const mockFill = (MOCK_TWEETS[categoryId] ?? []).filter(
       (t) => !rssHandles.has(t.authorHandle)
@@ -31,13 +58,13 @@ export async function GET(
     );
     return NextResponse.json(merged, {
       headers: {
-        "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control": "private, max-age=300",
         "X-Data-Source": "rss",
       },
     });
   }
 
-  // 2. Fallback: mock
+  // 3. Mock
   return NextResponse.json(MOCK_TWEETS[categoryId] ?? [], {
     headers: { "X-Data-Source": "mock-fallback" },
   });

@@ -22,8 +22,8 @@ function useTweets(categories: Category[]) {
   useEffect(() => {
     let cancelled = false;
     for (const cat of categories) {
-      fetch(`/api/tweets/${cat.id}`)
-        .then((r) => r.ok ? r.json() : null)
+      fetch(`/api/tweets/${cat.id}`, { credentials: "same-origin" })
+        .then((r) => (r.ok ? r.json() : null))
         .then((data: Tweet[] | null) => {
           if (!cancelled && Array.isArray(data) && data.length > 0) {
             setTweets((prev) => ({ ...prev, [cat.id]: data }));
